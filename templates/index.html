@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StyleMaxx - Authenticated</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#4F46E5', // Indigo 600
+                        'secondary': '#111827', // Gray 900
+                        'accent': '#FDE047', // Yellow 300
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for a clean, minimalist look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9FAFB; /* Light gray background */
+        }
+        /* Custom file input appearance */
+        .file-upload-area {
+            border: 2px dashed #D1D5DB;
+            background-color: #FFFFFF;
+            transition: all 0.2s;
+        }
+        .file-upload-area:hover {
+            border-color: #9CA3AF;
+            background-color: #F3F4F6;
+        }
+        
+        /* --- Text Animation Keyframes (Unchanged) --- */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+                text-shadow: 0 0px 0px rgba(0, 0, 0, 0); 
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                text-shadow: 0 10px 15px rgba(0, 0, 0, 0.15); 
+            }
+        }
+        
+        .animate-slide-up-main {
+            transition: text-shadow 0.3s ease-out; 
+            animation: slideInUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            opacity: 0; 
+        }
+        
+        .animate-slide-up-delay {
+            animation: slideInUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s forwards;
+            opacity: 0; 
+        }
+        /* --- End Text Animation Keyframes --- */
+
+        /* --- Global Background Icon Animations --- */
+        @keyframes floatAndRotate {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                /* Increased float movement */
+                transform: translateY(-50px) rotate(8deg); 
+            }
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+        }
+
+        .background-icon {
+            position: absolute;
+            font-size: 300px; /* Make the icons huge */
+            color: #4F46E5; /* Primary color */
+            opacity: 0.04; /* Very faint */
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+            pointer-events: none; /* Ensure the icons don't interfere with clicks */
+        }
+        
+        /* Specific animations and positions for variety */
+        #icon-shirt {
+            top: 10%;
+            left: 5%;
+            transform: scale(1.2);
+            animation-name: floatAndRotate;
+            animation-duration: 22s; /* Slower and more prominent movement */
+            animation-delay: 2s;
+        }
+
+        #icon-hanger {
+            bottom: 15%;
+            right: 10%;
+            transform: scale(0.9) rotate(-15deg);
+            animation-name: floatAndRotate;
+            animation-duration: 17s;
+            animation-delay: 0s;
+        }
+        
+        #icon-trousers {
+            top: 50%;
+            left: 45%;
+            transform: scale(1.5) rotate(5deg);
+            animation-name: floatAndRotate;
+            animation-duration: 25s;
+            animation-delay: 5s;
+        }
+
+        /* Ensure content stays on top and is centered */
+        .page > * {
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* Custom modal for smooth entry/exit */
+        .modal-fade-in {
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .modal-fade-in.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Style for the color swatch */
+        .color-swatch {
+            height: 40px;
+            width: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .color-swatch:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+
+    <div id="app-container" class="h-full relative">
+
+        <div id="background-icons" class="w-full h-full absolute top-0 left-0">
+            <svg id="icon-shirt" class="background-icon" style="top: 10%; left: 5%;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M12 3v3m0 0l-2 2m2-2l2 2m-2-2h-3a2 2 0 00-2 2v9m7-14h3a2 2 0 012 2v9m-7-9l3 3m-3-3l-3 3"/>
+            </svg>
+            <svg id="icon-hanger" class="background-icon" style="bottom: 15%; right: 10%;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M18.364 9.364l-1.414 1.414m0 0L14 7.414V7a2 2 0 00-2-2m0 0H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7.414l-2.95 2.95z"/>
+            </svg>
+            <svg id="icon-trousers" class="background-icon" style="top: 50%; left: 45%;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M19 14V5a2 2 0 00-2-2H7a2 2 0 00-2 2v9m14 0l-2 7H7l-2-7m7-10V3M12 14v7"/>
+            </svg>
+        </div>
+
+
+        <header id="status-bar" class="absolute top-0 left-0 right-0 p-4 z-40 bg-white shadow-md flex justify-between items-center transition-opacity duration-300 opacity-0 hidden">
+            <div class="flex items-center space-x-3">
+                {% if user %}
+                    <img src="{{ user.picture | default('https://placehold.co/40x40/4F46E5/ffffff?text=U') }}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-primary">
+                    <span class="text-sm font-semibold text-secondary">Hello, {{ user.name | default(user.email) | default('User') }}</span>
+                {% else %}
+                    <span class="text-sm font-semibold text-gray-500">Welcome Guest</span>
+                {% endif %}
+            </div>
+            
+            {% if user %}
+                <a href="/logout" class="text-sm font-medium text-red-600 hover:text-red-800 transition-colors duration-200 py-2 px-4 rounded-full bg-red-50">Logout</a>
+            {% else %}
+                {% endif %}
+        </header>
+
+        <section id="page-home" class="page flex flex-col items-center justify-center h-full text-secondary cursor-pointer transition-opacity duration-500 relative overflow-hidden text-center">
+            
+            <h1 class="text-7xl sm:text-9xl font-extrabold tracking-tight animate-slide-up-main z-20">stylemaxx</h1>
+            
+            <div class="mt-4 pt-4 border-t border-gray-300 w-full max-w-xs sm:max-w-sm text-center animate-slide-up-delay z-20">
+                <p class="text-sm sm:text-base font-light text-gray-400 opacity-80 animate-pulse transition-opacity duration-700">
+                    click anywhere to begin
+                </p>
+            </div>
+        </section>
+
+        <section id="page-auth-prompt" class="page hidden h-full flex flex-col items-center justify-center p-4 transition-opacity duration-500 text-center">
+            <div class="bg-white p-8 sm:p-12 rounded-xl shadow-2xl w-full max-w-sm z-20">
+                
+                <svg class="w-12 h-12 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4"/>
+                </svg>
+                <h2 class="text-4xl font-extrabold text-secondary mb-3">StyleMaxx</h2>
+                
+                <a href="/login" class="w-full inline-flex justify-center items-center space-x-3 py-4 px-8 border border-transparent rounded-full shadow-lg text-xl font-medium text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200">
+                    <span>Log In / Sign Up</span>
+                </a>
+            </div>
+        </section>
+
+        <section id="page-face-upload" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
+            <div class="max-w-4xl mx-auto h-full flex flex-col z-20 pb-20">
+                <h2 class="text-3xl font-bold text-secondary mb-8 text-center">Step 1: Color Palette Analysis</h2>
+
+                <form id="face-upload-form" onsubmit="return false;" class="flex flex-col flex-grow">
+                    <div id="face-upload-area" class="file-upload-area flex flex-col items-center justify-center p-6 sm:p-12 rounded-xl flex-grow w-full shadow-lg cursor-pointer min-h-64">
+                        <svg class="w-12 h-12 text-primary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p class="text-lg font-medium text-secondary" id="upload-text">Upload your face photo</p>
+                        <p class="text-sm text-gray-500 mt-1 text-center">Drag and drop or click to select a file for color analysis (JPEG, PNG).</p>
+                        <input type="file" id="face-photo-input" name="file" accept="image/*" class="hidden" onchange="handleFaceUpload()">
+                    </div>
+                    <div id="face-upload-status" class="mt-4 text-center font-medium text-gray-600"></div>
+
+                    <div class="mt-8 flex justify-end">
+                        <button type="submit" onclick="submitFaceAnalysis()" class="px-8 py-3 bg-primary text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-200 opacity-50" id="face-next-button" disabled>
+                            Analyze & Next
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="page-style-upload" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
+            <div class="max-w-4xl mx-auto h-full flex flex-col z-20 pb-20">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-secondary">Step 2: Define Your Style</h2>
+                    <button onclick="toggleInventoryModal(true)" class="flex items-center space-x-2 px-4 py-2 bg-white text-secondary border border-gray-300 rounded-full shadow-md hover:bg-gray-100 transition-colors duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <span class="text-sm font-semibold hidden sm:inline">Smart Inventory</span>
+                    </button>
+                </div>
+
+                <div id="style-upload-area" class="file-upload-area flex flex-col items-center justify-center p-6 sm:p-12 rounded-xl h-96 w-full shadow-lg cursor-pointer">
+                    <svg class="w-12 h-12 text-primary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <p class="text-lg font-medium text-secondary">Upload a picture of your desired style</p>
+                    <p class="text-sm text-gray-500 mt-1 text-center">This helps us understand your fashion preferences.</p>
+                    <input type="file" id="style-photo-input" accept="image/*" class="hidden" onchange="handleStyleUpload()">
+                </div>
+                <div id="style-upload-status" class="mt-4 text-center font-medium text-gray-600"></div>
+
+                <div class="mt-auto py-8 flex justify-center">
+                    <button onclick="showPage('page-results')" class="px-12 py-4 bg-accent text-secondary font-bold text-lg rounded-full shadow-xl hover:bg-yellow-400 transition-colors duration-200 opacity-50" id="suggestions-button" disabled>
+                        Get Style Suggestions
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-results" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
+            <div class="max-w-6xl mx-auto pb-10 z-20">
+                <h2 class="text-3xl font-bold text-secondary mb-8 text-center">Your StyleMaxx Outfit Pairs</h2>
+
+                <div id="outfit-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    </div>
+                
+                <div class="text-center mt-12">
+                    <button onclick="showPage('page-home')" class="text-primary hover:text-indigo-700 text-sm font-medium">Start Over</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="inventory-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 sm:p-8 rounded-xl max-w-lg w-full shadow-2xl relative">
+            <button onclick="toggleInventoryModal(false)" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 class="text-2xl font-bold text-secondary mb-6">Smart Inventory Uploader</h3>
+            
+            <div class="space-y-4">
+                <select id="clothing-type-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                    <option value="">Select Clothing Type</option>
+                    <option value="top">Top (Shirt, Jacket, Sweater)</option>
+                    <option value="bottom">Bottom (Pants, Skirt, Shorts)</option>
+                    <option value="accessory">Accessory</option>
+                </select>
+
+                <div id="inventory-upload-area" class="file-upload-area flex flex-col items-center justify-center p-6 rounded-xl h-48 w-full">
+                    <svg class="w-8 h-8 text-primary mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <p class="text-base font-medium text-secondary">Upload Clothing Piece</p>
+                    <p class="text-xs text-gray-500 mt-1">Select type above first.</p>
+                    <input type="file" id="inventory-photo-input" accept="image/*" class="hidden">
+                </div>
+            </div>
+
+            <button class="mt-6 w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                Add to Inventory (Mock)
+            </button>
+            <p class="text-xs text-center text-gray-400 mt-2">Note: This is a frontend simulation. Backend processing would occur here.</p>
+        </div>
+    </div>
+    
+    <div id="color-palette-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-end justify-center">
+        <div id="color-palette-content" class="bg-white p-6 sm:p-8 rounded-t-3xl max-w-2xl w-full shadow-2xl relative modal-fade-in" onclick="event.stopPropagation()">
+            <button onclick="showColorPaletteModal(false)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 class="text-2xl font-bold text-secondary mb-4 flex items-center">
+                <svg class="w-6 h-6 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.818-1.818A1.25 1.25 0 0115 5h1.25c.818 0 1.5.682 1.5 1.5V9m-11 5l3-3m-3 0h7"></path></svg>
+                Your Personal Color Palette
+            </h3>
+            <p class="text-sm text-gray-500 mb-6 border-b pb-4">These colors and metals are recommended based on your facial analysis for a naturally flattering look.</p>
+
+            <div id="palette-features" class="grid grid-cols-2 gap-4 text-sm mb-6">
+                </div>
+
+            <div class="space-y-6">
+                <div id="complementary-colors-section">
+                    <h4 class="font-bold text-lg text-primary mb-2">Complementary Colors</h4>
+                    <div id="complementary-colors-container" class="flex flex-wrap gap-3">
+                        </div>
+                </div>
+
+                <div id="eye-enhancing-colors-section">
+                    <h4 class="font-bold text-lg text-secondary mb-2">Eye-Enhancing Accents</h4>
+                    <div id="eye-enhancing-colors-container" class="flex flex-wrap gap-3">
+                        </div>
+                </div>
+
+                <div id="avoid-colors-section" class="bg-red-50 p-3 rounded-lg border border-red-200">
+                    <h4 class="font-bold text-sm text-red-600 mb-1 flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.772-1.333-2.688-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        Colors to Avoid
+                    </h4>
+                    <p id="avoid-colors-list" class="text-sm text-gray-700"></p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <div id="bottom-nav" class="fixed bottom-0 left-0 right-0 h-16 bg-white shadow-2xl border-t border-gray-100 flex justify-around items-center z-40 transition-transform duration-300 translate-y-full" style="padding-bottom: env(safe-area-inset-bottom);">
+        
+        <button onclick="showPage('page-face-upload')" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors disabled:opacity-50" id="home-nav-button" disabled>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span class="text-xs mt-0.5">Home</span>
+        </button>
+        
+        <button onclick="showColorPaletteModal(true)" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors disabled:opacity-50" id="palette-nav-button" disabled>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.818-1.818A1.25 1.25 0 0115 5h1.25c.818 0 1.5.682 1.5 1.5V9m-11 5l3-3m-3 0h7"></path></svg>
+            <span class="text-xs mt-0.5">Palette</span>
+        </button>
+
+        <button onclick="showPage('page-style-upload')" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors disabled:opacity-50" id="style-nav-button" disabled>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6h6m4 6a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6h6"></path></svg>
+            <span class="text-xs mt-0.5">Style</span>
+        </button>
+
+    </div>
+
+
+    <script>
+        // Variable populated by Flask/Jinja to track authentication status
+        const isAuthenticated = "{% if user %}true{% else %}false{% endif %}" === "true";
+        // New variable to hold backend color results
+        // FIX APPLIED HERE: Use JSON.parse() on the stringified Jinja output for robust JSON handling.
+        let colorPaletteResults = JSON.parse('{{ color_results | tojson }}'); 
+        
+        // --- Navigation and State Management ---
+        let currentStatus = {
+            faceUploaded: !!colorPaletteResults, // If results exist, face is considered "uploaded/analyzed"
+            styleUploaded: false
+        };
+
+        // Note: 'page-auth-prompt' is the new second page
+        const pages = ['page-home', 'page-auth-prompt', 'page-face-upload', 'page-style-upload', 'page-results'];
+        const navButtons = ['home-nav-button', 'palette-nav-button', 'style-nav-button'];
+
+
+        /**
+         * Hides all pages and shows the requested page.
+         */
+        function showPage(pageId) {
+            pages.forEach(id => {
+                const page = document.getElementById(id);
+                if (page) {
+                    page.classList.add('hidden');
+                    page.classList.remove('flex', 'block'); // Remove display classes
+                }
+            });
+
+            const nextPage = document.getElementById(pageId);
+            const statusBar = document.getElementById('status-bar');
+            const bottomNav = document.getElementById('bottom-nav');
+
+            if (nextPage) {
+                // Determine appropriate display style
+                const displayClass = (pageId === 'page-home' || pageId === 'page-auth-prompt') ? 'flex' : 'block';
+                nextPage.classList.remove('hidden');
+                nextPage.classList.add(displayClass);
+                
+                // Show/Hide Status Bar and Bottom Nav
+                if (pageId !== 'page-home') {
+                    statusBar.classList.remove('hidden', 'opacity-0');
+                    statusBar.classList.add('opacity-100');
+                    bottomNav.classList.remove('translate-y-full');
+                    bottomNav.classList.add('translate-y-0');
+                } else {
+                    statusBar.classList.remove('opacity-100');
+                    statusBar.classList.add('hidden', 'opacity-0');
+                    bottomNav.classList.remove('translate-y-0');
+                    bottomNav.classList.add('translate-y-full');
+                }
+
+                // If navigating to results, generate mock cards
+                if (pageId === 'page-results') {
+                    generateOutfitCards();
+                }
+            }
+        }
+
+        // --- Page 1 Event Listener: Navigates based on Auth Status ---
+        document.getElementById('page-home').addEventListener('click', () => {
+            if (isAuthenticated) {
+                // If analyzed before, jump to style upload, otherwise face upload
+                if (currentStatus.faceUploaded) {
+                    showPage('page-style-upload');
+                } else {
+                    showPage('page-face-upload');
+                }
+            } else {
+                showPage('page-auth-prompt'); // Navigate to the new internal Auth prompt
+            }
+        });
+
+
+        /**
+         * Enables/disables the next and navigation buttons based on status.
+         */
+        function checkNavigation() {
+            const faceNextButton = document.getElementById('face-next-button');
+            const suggestionsButton = document.getElementById('suggestions-button');
+            const paletteNavButton = document.getElementById('palette-nav-button');
+            const styleNavButton = document.getElementById('style-nav-button');
+
+            // Face Upload Page (Next/Analyze button)
+            if (faceNextButton) {
+                // Only enable if a file is selected (but not yet analyzed) OR if analysis failed
+                if (document.getElementById('face-photo-input').files.length > 0 && !currentStatus.isAnalyzing) {
+                    faceNextButton.disabled = false;
+                    faceNextButton.classList.remove('opacity-50');
+                } else {
+                    faceNextButton.disabled = true;
+                    faceNextButton.classList.add('opacity-50');
+                }
+            }
+            
+            // Style Upload Page (Suggestions button)
+            if (suggestionsButton) {
+                if (currentStatus.styleUploaded && currentStatus.faceUploaded) {
+                    suggestionsButton.disabled = false;
+                    suggestionsButton.classList.remove('opacity-50');
+                } else {
+                    suggestionsButton.disabled = true;
+                    suggestionsButton.classList.add('opacity-50');
+                }
+            }
+
+            // Bottom Navigation Buttons
+            // Palette button is enabled only after face analysis is complete
+            if (paletteNavButton) {
+                if (currentStatus.faceUploaded) {
+                    paletteNavButton.disabled = false;
+                    paletteNavButton.classList.remove('opacity-50');
+                } else {
+                    paletteNavButton.disabled = true;
+                    paletteNavButton.classList.add('opacity-50');
+                }
+            }
+            // Style button is enabled after face analysis is complete
+            if (styleNavButton) {
+                if (currentStatus.faceUploaded) {
+                    styleNavButton.disabled = false;
+                    styleNavButton.classList.remove('opacity-50');
+                } else {
+                    styleNavButton.disabled = true;
+                    styleNavButton.classList.add('opacity-50');
+                }
+            }
+        }
+
+        // --- Core Analysis Submission Logic ---
+
+        async function submitFaceAnalysis() {
+            const input = document.getElementById('face-photo-input');
+            const statusDiv = document.getElementById('face-upload-status');
+            const faceNextButton = document.getElementById('face-next-button');
+            
+            if (input.files.length === 0) {
+                statusDiv.textContent = 'Please select a file first.';
+                return;
+            }
+
+            currentStatus.isAnalyzing = true;
+            faceNextButton.disabled = true;
+            faceNextButton.textContent = 'Analyzing...';
+            statusDiv.innerHTML = '<span class="text-primary animate-pulse">Processing image and generating palette...</span>';
+
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/analyze_face', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                currentStatus.isAnalyzing = false;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    colorPaletteResults = data.results; // Store the results globally
+                    currentStatus.faceUploaded = true;
+                    statusDiv.innerHTML = `<span class="text-green-600 font-semibold">${data.message} Analysis Complete!</span>`;
+                    faceNextButton.textContent = 'Go to Step 2: Style';
+                    
+                    // Automatically navigate after successful analysis
+                    setTimeout(() => {
+                        showPage('page-style-upload');
+                    }, 1000);
+                    
+                } else {
+                    const errorData = await response.json();
+                    statusDiv.innerHTML = `<span class="text-red-600 font-semibold">Error: ${errorData.error || 'Failed to analyze face.'}</span>`;
+                    faceNextButton.textContent = 'Retry Analysis';
+                }
+            } catch (error) {
+                currentStatus.isAnalyzing = false;
+                console.error('Analysis error:', error);
+                statusDiv.innerHTML = '<span class="text-red-600 font-semibold">Network error or server connection failed.</span>';
+                faceNextButton.textContent = 'Retry Analysis';
+            } finally {
+                currentStatus.isAnalyzing = false;
+                checkNavigation(); // Re-check navigation state
+            }
+        }
+
+
+        // --- File Upload and Drag/Drop Logic (Adapted) ---
+
+        document.getElementById('face-upload-area').addEventListener('click', () => {
+            if (!currentStatus.isAnalyzing) {
+                document.getElementById('face-photo-input').click();
+            }
+        });
+        document.getElementById('style-upload-area').addEventListener('click', () => {
+            document.getElementById('style-photo-input').click();
+        });
+        
+        // Drag/Drop Helpers
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.getElementById('face-upload-area').addEventListener(eventName, preventDefaults, false);
+            document.getElementById('style-upload-area').addEventListener(eventName, preventDefaults, false);
+        });
+        
+        // Highlight on drag
+        ['dragenter', 'dragover'].forEach(eventName => {
+            document.getElementById('face-upload-area').addEventListener(eventName, () => document.getElementById('face-upload-area').classList.add('ring-2', 'ring-primary'), false);
+            document.getElementById('style-upload-area').addEventListener(eventName, () => document.getElementById('style-upload-area').classList.add('ring-2', 'ring-primary'), false);
+        });
+        // Remove highlight on exit/drop
+        ['dragleave', 'drop'].forEach(eventName => {
+            document.getElementById('face-upload-area').addEventListener(eventName, () => document.getElementById('face-upload-area').classList.remove('ring-2', 'ring-primary'), false);
+            document.getElementById('style-upload-area').addEventListener(eventName, () => document.getElementById('style-upload-area').classList.remove('ring-2', 'ring-primary'), false);
+        });
+        
+        document.getElementById('face-upload-area').addEventListener('drop', handleDrop.bind(null, 'face-photo-input'), false);
+        document.getElementById('style-upload-area').addEventListener('drop', handleDrop.bind(null, 'style-photo-input'), false);
+        
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDrop(targetInputId, e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            const input = document.getElementById(targetInputId);
+            if (input) {
+                 // Assign dropped files to the file input element
+                input.files = files;
+                if (targetInputId === 'face-photo-input') {
+                    handleFaceUpload();
+                } else if (targetInputId === 'style-photo-input') {
+                    handleStyleUpload();
+                }
+            }
+        }
+
+        function handleFaceUpload() {
+            const input = document.getElementById('face-photo-input');
+            const statusDiv = document.getElementById('face-upload-status');
+            const uploadText = document.getElementById('upload-text');
+
+            if (input.files.length > 0) {
+                statusDiv.innerHTML = `File selected: <span class="text-primary">${input.files[0].name}</span>. Click 'Analyze & Next' to begin.`;
+                uploadText.textContent = `File Ready: ${input.files[0].name}`;
+                currentStatus.fileSelected = true;
+            } else {
+                statusDiv.textContent = 'No file selected.';
+                uploadText.textContent = 'Upload your face photo';
+                currentStatus.fileSelected = false;
+            }
+            checkNavigation();
+        }
+
+        function handleStyleUpload() {
+            const input = document.getElementById('style-photo-input');
+            const statusDiv = document.getElementById('style-upload-status');
+            
+            if (input.files.length > 0) {
+                statusDiv.innerHTML = `Style reference selected: <span class="text-primary">${input.files[0].name}</span>. Click 'Get Suggestions'.`;
+                currentStatus.styleUploaded = true;
+            } else {
+                statusDiv.textContent = 'No file selected.';
+                currentStatus.styleUploaded = false;
+            }
+            checkNavigation();
+        }
+
+        function toggleInventoryModal(show) {
+            const modal = document.getElementById('inventory-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // --- Color Palette Modal Logic (New) ---
+
+        function showColorPaletteModal(show) {
+            const modal = document.getElementById('color-palette-modal');
+            const content = document.getElementById('color-palette-content');
+            
+            if (!colorPaletteResults && show) {
+                alert("Please upload and analyze your face photo first!");
+                return;
+            }
+
+            if (show) {
+                populateColorPaletteModal(colorPaletteResults);
+                modal.classList.remove('hidden');
+                // Force a repaint before adding the class for smooth transition
+                setTimeout(() => {
+                    content.classList.add('is-visible');
+                }, 10);
+            } else {
+                content.classList.remove('is-visible');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300); // Match transition duration
+            }
+        }
+
+        function populateColorPaletteModal(results) {
+            if (!results) return;
+
+            const featuresDiv = document.getElementById('palette-features');
+            const complementaryContainer = document.getElementById('complementary-colors-container');
+            const eyeEnhancingContainer = document.getElementById('eye-enhancing-colors-container');
+            const avoidList = document.getElementById('avoid-colors-list');
+
+            // Clear previous content
+            featuresDiv.innerHTML = '';
+            complementaryContainer.innerHTML = '';
+            eyeEnhancingContainer.innerHTML = '';
+            avoidList.textContent = '';
+            
+            // --- 1. Populate Features ---
+            const featureMap = {
+                'skin_tone': 'Skin Tone',
+                'hair_color': 'Hair Color',
+                'eye_color': 'Eye Color',
+            };
+            
+            // Include Season/Metal directly
+            if (results.color_palette.season) {
+                featuresDiv.insertAdjacentHTML('beforeend', `
+                    <div class="p-2 border border-gray-200 rounded-lg bg-gray-50"><span class="font-bold text-secondary">Season:</span> ${results.color_palette.season}</div>
+                `);
+            }
+            if (results.color_palette.best_metals && results.color_palette.best_metals.length > 0) {
+                featuresDiv.insertAdjacentHTML('beforeend', `
+                    <div class="p-2 border border-gray-200 rounded-lg bg-gray-50"><span class="font-bold text-secondary">Best Metals:</span> ${results.color_palette.best_metals.join(', ')}</div>
+                `);
+            }
+            
+            // Populate detected facial features
+            for (const key in featureMap) {
+                if (results.features[key]) {
+                    featuresDiv.insertAdjacentHTML('beforeend', `
+                        <div class="p-2 border border-gray-200 rounded-lg bg-gray-50"><span class="font-bold text-secondary">${featureMap[key]}:</span> ${results.features[key]}</div>
+                    `);
+                }
+            }
+            
+            // --- 2. Populate Colors ---
+            const colorKeywordsToHex = {
+                // A simplified, brand-aligned mapping for visual display
+                'Pastels': '#C6D5F2', 'Soft Blues': '#78A9C1', 'Peach': '#F9D1AF', 'Coral': '#F4897C', 'Light Pink': '#F9C8C6',
+                'Bold Colors': '#4F46E5', 'Royal Blue': '#002FA7', 'Emerald': '#009473', 'Pure White': '#FFFFFF', 'Black': '#000000',
+                'Warm Browns': '#A0522D', 'Orange': '#FF8C00', 'Rust': '#B7410E', 'Icy Colors': '#D0E0E3', 'Pale Pastels': '#E0E7FF',
+                'Warm Earth Tones': '#B8860B', 'Olive Green': '#6B8E23', 'Gold': '#FFD700', 'Bronze': '#CD7F32', 'Copper': '#B87333',
+                'Rich Jewel Tones': '#8E44AD', 'Deep Purple': '#4B0082', 'Burgundy': '#800020',
+                'Green': '#00A000', 'Purple': '#9932CC', 'Blue': '#4169E1', 'Plum': '#A020F0', 'Rose': '#FF007F',
+                'Pale Colors': '#F0F8FF', 'Washed Out Tones': '#E6E6FA',
+                'Navy Chinos': '#1F2937', 'White Pleated Skirt': '#FFFFFF', 'Cream Linen Shirt': '#FDFCEF', 'Light Wash Jeans': '#BFDBFE',
+                'Olive Green Jacket': '#5C6773', 'Charcoal Knit Sweater': '#374151', 'Black Trousers': '#1F2937', 'Coral Blouse': '#FDBA74',
+                
+                // Add your model's hex outputs if they exist
+                ...results.dominant_colors.skin,
+                ...results.dominant_colors.hair,
+                ...results.dominant_colors.eyes,
+            };
+
+            const generateColorSwatch = (colorName, hex) => `
+                <div class="flex flex-col items-center group cursor-pointer p-1">
+                    <div class="color-swatch" style="background-color: ${hex}; border: 1px solid ${hex === '#FFFFFF' ? '#D1D5DB' : 'transparent'};"></div>
+                    <span class="text-xs mt-1 text-gray-700 font-medium group-hover:text-primary transition-colors">${colorName}</span>
+                </div>
+            `;
+            
+            // Complementary Colors
+            if (results.color_palette.complementary_colors) {
+                results.color_palette.complementary_colors.forEach(color => {
+                    const hex = colorKeywordsToHex[color] || '#D1D5DB'; // Default to light gray if hex not found
+                    complementaryContainer.insertAdjacentHTML('beforeend', generateColorSwatch(color, hex));
+                });
+            }
+
+            // Eye-Enhancing Colors
+            if (results.color_palette.eye_enhancing_colors) {
+                results.color_palette.eye_enhancing_colors.forEach(color => {
+                    const hex = colorKeywordsToHex[color] || '#D1D5DB';
+                    eyeEnhancingContainer.insertAdjacentHTML('beforeend', generateColorSwatch(color, hex));
+                });
+            }
+            
+            // Colors to Avoid
+            if (results.color_palette.avoid_colors) {
+                avoidList.textContent = results.color_palette.avoid_colors.join(', ');
+            }
+        }
+
+
+        // --- Page 5 Logic (Results) ---
+        function generateOutfitCards() {
+            const cardsContainer = document.getElementById('outfit-cards');
+            cardsContainer.innerHTML = ''; // Clear previous results
+
+            // Mock data for 4 outfits
+            const mockOutfits = [
+                // Use color palette results for a more integrated feel
+                { id: 1, top: 'Cream Linen Shirt', bottom: 'Navy Chinos', topColor: '#FDFCEF', bottomColor: '#1F2937' },
+                { id: 2, top: 'Olive Green Jacket', bottom: 'Light Wash Jeans', topColor: '#5C6773', bottomColor: '#BFDBFE' },
+                { id: 3, top: 'Charcoal Knit Sweater', bottom: 'Black Trousers', topColor: '#374151', bottomColor: '#1F2937' },
+                { id: 4, top: 'Coral Blouse', bottom: 'White Pleated Skirt', topColor: '#F4897C', bottomColor: '#FFFFFF' }, // Using the mapped Coral color
+            ];
+            
+            // Add a recommendation from the actual color palette if available
+            if (colorPaletteResults && colorPaletteResults.color_palette.complementary_colors.length > 0) {
+                 const bestColorName = colorPaletteResults.color_palette.complementary_colors[0];
+                 const bestColorHex = colorPaletteResults.color_palette.complementary_colors[0] === 'Royal Blue' ? '#002FA7' : '#4F46E5'; // Example dynamic mapping
+                
+                mockOutfits.push({
+                    id: 5, 
+                    top: `The Perfect ${bestColorName} Tee`, 
+                    bottom: 'Tailored Gray Slacks', 
+                    topColor: bestColorHex, 
+                    bottomColor: '#4B5563' 
+                });
+            }
+
+
+            mockOutfits.forEach(outfit => {
+                const cardHtml = `
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transform hover:scale-[1.02] transition-transform duration-300">
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold text-secondary mb-3">Outfit #${outfit.id}</h3>
+                            <p class="text-sm text-gray-500 mb-4">A perfect match based on your palette and style.</p>
+                            
+                            <div class="mb-3 p-3 bg-gray-50 rounded-lg flex items-center justify-between border-l-4" style="border-color: ${outfit.topColor};">
+                                <span class="font-semibold text-sm">${outfit.top}</span>
+                                <span class="text-xs text-gray-500">TOP</span>
+                            </div>
+
+                            <div class="p-3 bg-gray-50 rounded-lg flex items-center justify-between border-l-4" style="border-color: ${outfit.bottomColor};">
+                                <span class="font-semibold text-sm">${outfit.bottom}</span>
+                                <span class="text-xs text-gray-500">BOTTOM</span>
+                            </div>
+                        </div>
+                        <button class="w-full py-3 bg-primary text-white font-medium hover:bg-indigo-700 transition-colors duration-200 text-sm">
+                            View Details
+                        </button>
+                    </div>
+                `;
+                cardsContainer.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+
+
+        // Initialize the app state
+        window.onload = () => {
+            // Check if Flask redirect landed on a page other than home, and show it.
+            // This is primarily for the Auth0 callback redirect to /upload_photo
+            const path = window.location.pathname;
+            if (isAuthenticated && path.includes('upload_photo')) {
+                // Determine if we should jump to step 2 if analysis is already done
+                if (currentStatus.faceUploaded) {
+                     showPage('page-style-upload');
+                } else {
+                    showPage('page-face-upload');
+                }
+            } else {
+                showPage('page-home');
+            }
+            checkNavigation();
+        }
+
+    </script>
+</body>
+</html>

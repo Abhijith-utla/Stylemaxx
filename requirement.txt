@@ -1,0 +1,14 @@
+# Project: StyleMaxx Facial Feature and Style Analyzer
+# Python Dependencies (from app.py and facerec.py)
+
+# Flask and related web dependencies
+Flask
+python-dotenv             # Used in app.py for environment variables
+authlib                   # Used in app.py for Auth0 integration
+werkzeug                  # Base library for file handling (included with Flask, but good to list if specific utilities are used)
+
+# Facial Analysis Dependencies (used in facerec.py)
+opencv-python             # For image loading and processing (cv2)
+numpy                     # For numerical operations on image arrays
+scikit-learn              # For KMeans clustering (sklearn)
+face-recognition          # For face and landmark detection

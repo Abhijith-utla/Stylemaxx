@@ -1,0 +1,24 @@
+# Environment Variables and Secrets
+.env
+*.env
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.o
+*.pyd
+
+# Dependencies
+venv/
+.venv/
+env/
+
+# Uploads and temporary files
+uploads/
+*.log
+.DS_Store
+
+# Common IDE/Editor files
+.vscode/
+.idea/
+*~
