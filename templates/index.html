@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StyleMaxx - Authenticated</title>
+    <title>StyleMaxx - Personalized AI Styling</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         // Firebase imports for module scripts
@@ -40,6 +40,22 @@
             font-family: 'Inter', sans-serif;
             background-color: #F9FAFB; /* Light gray background */
         }
+        
+        /* --- Dark Mode Overrides (Minimalist) --- */
+        body.dark { background-color: #111827; }
+        .dark .text-secondary { color: #F9FAFB; }
+        .dark .bg-white { background-color: #1F2937; }
+        .dark .bg-gray-50, .dark .feature-box { background-color: #374151; }
+        .dark .file-upload-area { border-color: #4B5563; background-color: #1F2937; }
+        .dark .inventory-item-card { background-color: #374151; }
+        .dark #status-bar, .dark #bottom-nav { background-color: #1F2937; border-color: #374151; }
+        .dark .feature-box span { color: #D1D5DB; } 
+        .dark .inventory-type-tag { opacity: 1; }
+        /* Dark mode modal fixes */
+        .dark #color-palette-content, .dark #inventory-upload-content { background-color: #1F2937; }
+        .dark .large-color-item { border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+        /* --- END Dark Mode Styles --- */
+        
         /* Custom file input appearance */
         .file-upload-area {
             border: 2px dashed #D1D5DB;
@@ -57,16 +73,8 @@
         
         /* --- Text Animation Keyframes (Unchanged) --- */
         @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-                text-shadow: 0 0px 0px rgba(0, 0, 0, 0); 
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-                text-shadow: 0 10px 15px rgba(0, 0, 0, 0.15); 
-            }
+            from { opacity: 0; transform: translateY(30px); text-shadow: 0 0px 0px rgba(0, 0, 0, 0); }
+            to { opacity: 1; transform: translateY(0); text-shadow: 0 10px 15px rgba(0, 0, 0, 0.15); }
         }
         
         .animate-slide-up-main {
@@ -83,118 +91,35 @@
 
         /* --- Global Background Icon Animations (Unchanged) --- */
         @keyframes floatAndRotate {
-            0% {
-                transform: translateY(0) rotate(0deg);
-            }
-            50% {
-                /* Increased float movement */
-                transform: translateY(-50px) rotate(8deg); 
-            }
-            100% {
-                transform: translateY(0) rotate(0deg);
-            }
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-50px) rotate(8deg); }
+            100% { transform: translateY(0) rotate(0deg); }
         }
 
         .background-icon {
-            position: absolute;
-            font-size: 300px; /* Make the icons huge */
-            color: #4F46E5; /* Primary color */
-            opacity: 0.04; /* Very faint */
-            animation-iteration-count: infinite;
-            animation-timing-function: ease-in-out;
-            pointer-events: none; /* Ensure the icons don't interfere with clicks */
+            position: absolute; font-size: 300px; color: #4F46E5; opacity: 0.04; 
+            animation-iteration-count: infinite; animation-timing-function: ease-in-out; pointer-events: none; 
         }
         
-        /* Specific animations and positions for variety (Unchanged) */
-        #icon-shirt {
-            top: 10%;
-            left: 5%;
-            transform: scale(1.2);
-            animation-name: floatAndRotate;
-            animation-duration: 22s; 
-            animation-delay: 2s;
-        }
-
-        #icon-hanger {
-            bottom: 15%;
-            right: 10%;
-            transform: scale(0.9) rotate(-15deg);
-            animation-name: floatAndRotate;
-            animation-duration: 17s;
-            animation-delay: 0s;
-        }
-        
-        #icon-trousers {
-            top: 50%;
-            left: 45%;
-            transform: scale(1.5) rotate(5deg);
-            animation-name: floatAndRotate;
-            animation-duration: 25s;
-            animation-delay: 5s;
-        }
+        #icon-shirt { top: 10%; left: 5%; transform: scale(1.2); animation-name: floatAndRotate; animation-duration: 22s; animation-delay: 2s; }
+        #icon-hanger { bottom: 15%; right: 10%; transform: scale(0.9) rotate(-15deg); animation-name: floatAndRotate; animation-duration: 17s; animation-delay: 0s; }
+        #icon-trousers { top: 50%; left: 45%; transform: scale(1.5) rotate(5deg); animation-name: floatAndRotate; animation-duration: 25s; animation-delay: 5s; }
 
         /* Ensure content stays on top and is centered (Unchanged) */
-        .page > * {
-            position: relative;
-            z-index: 10;
-        }
+        .page > * { position: relative; z-index: 10; }
         
         /* Custom modal for smooth entry/exit (Unchanged) */
-        .modal-fade-in {
-            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        .modal-fade-in.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .modal-fade-in { transition: opacity 0.3s ease-out, transform 0.3s ease-out; opacity: 0; transform: translateY(20px); }
+        .modal-fade-in.is-visible { opacity: 1; transform: translateY(0); }
         
-        /* Style for the color swatch (Unchanged) */
-        .color-swatch {
-            height: 40px;
-            width: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-        }
-        .color-swatch:hover {
-            transform: scale(1.05);
-        }
-
         /* Styles for the larger, redesigned Color Palette Modal (Unchanged width/height) */
-        #color-palette-content, #inventory-upload-content {
-            height: 85vh; 
-            max-height: 800px; 
-            max-width: 800px; 
-            width: 100%;
-            overflow-y: auto; 
-        }
+        #color-palette-content, #inventory-upload-content { height: 85vh; max-height: 800px; max-width: 800px; width: 100%; overflow-y: auto; }
 
-        /* Color items are small squares that fill the grid (Unchanged) */
-        .large-color-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem; /* Reduced padding */
-            height: 100px; /* fixed size */
-            border-radius: 8px; /* smaller border radius for tighter grid */
-            color: #FFFFFF;
-            font-weight: 600;
-            font-size: 0.8rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.6); 
-            transition: transform 0.2s;
-            cursor: pointer;
-            text-align: center;
-            overflow: hidden; /* prevents text overflow */
-        }
-        .large-color-item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
+        /* General Component Styles (Unchanged) */
+        .large-color-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.5rem; height: 100px; border-radius: 8px; color: #FFFFFF; font-weight: 600; font-size: 0.8rem; text-shadow: 0 1px 2px rgba(0,0,0,0.6); transition: transform 0.2s; cursor: pointer; text-align: center; overflow: hidden; }
+        .large-color-item:hover { transform: scale(1.05); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         
-        /* Feature Boxes (Icons Only) (Unchanged) */
+        /* Feature Boxes (Icons Only) - RE-ADDED STYLES FOR CLEAN LOOK */
         .feature-box {
             display: flex;
             flex-direction: column;
@@ -202,9 +127,12 @@
             justify-content: center;
             padding: 0.75rem; 
             border-radius: 12px;
-            background-color: #F3F4F6; 
+            background-color: #F3F4F6; /* Light background for contrast */
             transition: box-shadow 0.2s;
             min-height: 100px;
+        }
+        .dark .feature-box {
+            background-color: #374151; /* Dark mode background */
         }
         .feature-box:hover {
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -215,7 +143,6 @@
             height: 32px;
             margin-bottom: 0.5rem;
         }
-        /* Style for the subtle label (Unchanged) */
         .feature-label {
             font-size: 0.6rem;
             font-weight: 700;
@@ -224,38 +151,44 @@
             margin-bottom: 2px;
             letter-spacing: 0.05em;
         }
+        .dark .feature-label { color: #9CA3AF; }
+        /* END RE-ADDED STYLES */
 
-        /* Custom style for the Inventory Catalog items */
-        .inventory-item-card {
-            position: relative;
-            background-color: #FFFFFF;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.2s ease;
-            cursor: pointer; /* Enable selection */
-        }
-        .inventory-item-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
-        }
-        .inventory-item-card img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-        }
+        .inventory-item-card { position: relative; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden; transition: transform 0.3s ease, box-shadow 0.2s ease; cursor: pointer; }
+        .inventory-item-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15); }
+        .inventory-item-card img { width: 100%; height: 250px; object-fit: cover; }
+
+        /* --- Inventory Tag Colors --- */
         .inventory-type-tag {
             position: absolute;
             top: 8px;
             left: 8px;
             padding: 4px 8px;
-            background-color: rgba(79, 70, 229, 0.9); /* Primary color with transparency */
-            color: white;
             font-size: 0.75rem;
             font-weight: 700;
             border-radius: 6px;
+            color: white;
+            background-color: rgba(79, 70, 229, 0.9); /* Default/Primary color */
         }
-
+        .tag-top { background-color: #4F46E5; } /* Indigo */
+        .tag-bottom { background-color: #22C55E; } /* Green */
+        .tag-shoe { background-color: #F97316; } /* Orange */
+        .tag-accessory, .tag-outerwear { background-color: #6366F1; } /* Darker Indigo/Violet */
+        
+        /* --- Result Slider Styles (Modified for single card) --- */
+        #outfit-cards-container { 
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .outfit-slider {
+            display: flex;
+            transition: transform 0.3s ease-in-out;
+            width: 100%;
+        }
+        .outfit-slide {
+            flex: 0 0 100%; 
+            padding: 0 1rem;
+        }
     </style>
 </head>
 <body class="h-screen overflow-hidden">
@@ -290,7 +223,13 @@
         ">
             <div class="flex items-center space-x-3">
                 {% if user %}
-                    <img src="{{ user.picture | default('https://placehold.co/40x40/4F46E5/ffffff?text=U') }}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-primary">
+                    <div class="w-10 h-10 rounded-full border-2 border-primary flex items-center justify-center bg-indigo-500">
+                        {% if user.picture %}
+                            <img src="{{ user.picture }}" alt="User Avatar" class="w-full h-full rounded-full object-cover">
+                        {% else %}
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        {% endif %}
+                    </div>
                     <span class="text-sm font-semibold text-secondary">Hello, {{ user.name | default(user.email) | default('User') }}</span>
                 {% else %}
                     <span class="text-sm font-semibold text-gray-500">Welcome Guest</span>
@@ -330,7 +269,7 @@
 
         <section id="page-face-upload" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
             <div class="max-w-4xl mx-auto h-full flex flex-col z-20 pb-20">
-                <h2 class="text-3xl font-bold text-secondary mb-8 text-center">Step 1: Color Palette Analysis</h2>
+                <h2 class="text-3xl font-bold text-secondary mb-8 text-center">Step 1: Color Analysis</h2>
                 
                 <form id="face-upload-form" onsubmit="return false;" class="flex flex-col flex-grow">
                     <div id="face-upload-area" class="file-upload-area flex flex-col items-center justify-center p-6 sm:p-12 rounded-xl flex-grow w-full shadow-lg cursor-pointer min-h-64">
@@ -353,7 +292,7 @@
         <section id="page-inventory-catalog" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
             <div class="max-w-6xl mx-auto h-full flex flex-col z-20 pb-20">
                 <div class="flex justify-between items-center mb-6 border-b pb-4">
-                    <h2 class="text-3xl font-bold text-secondary">Step 2: Smart Inventory Catalog</h2>
+                    <h2 class="text-3xl font-bold text-secondary">Step 2: Inventory</h2>
                     <button onclick="toggleInventoryUploadModal(true)" class="px-4 py-2 bg-primary text-white font-medium rounded-full shadow-md hover:bg-indigo-700 transition-colors duration-200 flex items-center">
                         <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                         Add Item
@@ -374,23 +313,29 @@
                 </div>
 
                 <div class="mt-auto py-8 flex justify-center">
-                    <button onclick="handleChefUp()" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-12 py-4 bg-accent text-secondary font-bold text-lg rounded-full shadow-xl hover:bg-yellow-400 transition-colors duration-200 opacity-80 backdrop-blur-sm" id="suggestions-button" disabled>
+                    <button onclick="handleChefUp()" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-12 py-4 bg-accent text-secondary font-bold text-lg rounded-full shadow-xl hover:bg-yellow-400 transition-opacity duration-300 opacity-0" id="suggestions-button" disabled>
                         Chef Up Outfits
                     </button>
                 </div>
             </div>
-            <button onclick="toggleInventoryUploadModal(true)" aria-label="Add Inventory Item" class="fixed bottom-24 right-6 sm:bottom-16 sm:right-8 z-40 w-14 h-14 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition transform">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path></svg>
-            </button>
         </section>
 
 
         <section id="page-results" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
             <div class="max-w-6xl mx-auto pb-10 z-20">
-                <h2 class="text-3xl font-bold text-secondary mb-8 text-center">Step 3: Your StyleMaxx Outfit Pairs</h2>
+                <h2 class="text-3xl font-bold text-secondary mb-2 text-center">Step 3: Smart Recommendations</h2>
 
-                <div id="outfit-cards" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    </div>
+                <div id="outfit-cards-container" class="relative w-full max-w-xl mx-auto">
+                    <div id="outfit-slider" class="outfit-slider flex flex-nowrap" style="transform: translateX(0);">
+                        </div>
+                    
+                    <button id="slider-prev" onclick="moveSlider(-1)" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white/70 p-2 rounded-full shadow-md hover:bg-white z-30 ml-2 disabled:opacity-30">
+                         <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <button id="slider-next" onclick="moveSlider(1)" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white/70 p-2 rounded-full shadow-md hover:bg-white z-30 mr-2 disabled:opacity-30">
+                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
                 
                 <div class="text-center mt-12">
                     <button onclick="showPage('page-home')" class="text-primary hover:text-indigo-700 text-sm font-medium">Start Over</button>
@@ -434,7 +379,7 @@
                 <div id="inventory-message" class="text-center text-sm mt-2 font-medium"></div>
             </div>
             
-            </div>
+        </div>
     </div>
 
 
@@ -446,20 +391,20 @@
             
             <h3 class="text-3xl font-bold text-secondary mb-1 flex items-center justify-center text-center">
                 <svg class="w-8 h-8 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.818-1.818A1.25 1.25 0 0115 5h1.25c.818 0 1.5.682 1.5 1.5V9m-11 5l3-3m-3 0h7"></path></svg>
-                Your StyleMaxx Color Palette
+                Your Color Palette
             </h3>
             <p class="text-md text-gray-500 mb-6 border-b pb-4 text-center">Personalized color and style recommendations based on your facial features.</p>
 
             <div class="space-y-8">
                 
                 <div id="features-and-metals-section">
-                    <h4 class="font-bold text-xl text-primary mb-3 border-b-2 border-primary/20 pb-1 text-center">Facial Analysis & Season</h4>
+                    <h4 class="font-bold text-xl text-secondary mb-3 border-b-2 border-primary/20 pb-1 text-center">Facial Analysis</h4>
                     <div id="palette-features" class="text-sm"> 
                         </div>
                 </div>
 
                 <div id="complementary-colors-section">
-                    <h4 class="font-bold text-xl text-primary mb-3 border-b-2 border-primary/20 pb-1 text-center">Recommended Complementary Palette</h4>
+                    <h4 class="font-bold text-xl text-secondary mb-3 border-b-2 border-primary/20 pb-1 text-center">Recommended Complementary Palette</h4>
                     <div id="complementary-colors-container" class="grid grid-cols-5 gap-3"> 
                         </div>
                 </div>
@@ -483,6 +428,12 @@
     </div>
     
     <div id="bottom-nav" class="fixed bottom-0 left-0 right-0 h-16 bg-white shadow-2xl border-t border-gray-100 flex justify-around items-center z-40 transition-transform duration-300 translate-y-full" style="padding-bottom: env(safe-area-inset-bottom);">
+        
+        <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" id="dark-mode-toggle" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+            <svg id="sun-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <svg id="moon-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            <span class="text-xs mt-0.5">Mode</span>
+        </button>
         
         <button onclick="showPage('page-face-upload')" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors disabled:opacity-50" id="home-nav-button" disabled>
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
@@ -512,7 +463,7 @@
         // The app ID is passed for constructing the Firestore path.
         const __app_id = '{{ firebase_app_id | default("default-app-id") }}';
         // The outfit results are passed from the backend
-        const __outfit_results = '{{ outfit_results | tojson }}'; // <--- NEW INJECTION
+        const __outfit_results = '{{ outfit_results | tojson }}'; 
         // Note: __initial_auth_token is kept as null for this version, relying on signInAnonymously if needed.
         const __initial_auth_token = null;
     </script>
@@ -527,18 +478,22 @@
         
         const isAuthenticated = "{% if user %}true{% else %}false{% endif %}" === "true";
         let colorPaletteResults = JSON.parse('{{ color_results | tojson }}'); 
-        let outfitResults = JSON.parse(typeof __outfit_results !== 'undefined' ? __outfit_results : 'null'); // <--- INITIALIZE OUTFIT RESULTS
+        let outfitResults = JSON.parse(typeof __outfit_results !== 'undefined' ? __outfit_results : 'null'); 
         
         let currentStatus = {
             faceUploaded: !!colorPaletteResults, 
             styleUploaded: false, 
             isAnalyzing: false,
-            isCheffingUp: false, // <--- NEW STATE FLAG
-            canChefUp: false,    // <--- NEW STATE FLAG
+            isCheffingUp: false, 
+            canChefUp: false,
         };
 
         const pages = ['page-home', 'page-auth-prompt', 'page-face-upload', 'page-inventory-catalog', 'page-results'];
         const navButtons = ['home-nav-button', 'palette-nav-button', 'inventory-nav-button', 'style-nav-button'];
+
+        // NEW: Slider state for suggested outfits
+        let currentSlideIndex = 0;
+        const SLIDE_DURATION_MS = 300;
 
 
         /**
@@ -632,8 +587,6 @@
         }
 
 
-        // --- Inventory Upload Modal Functions (MODIFIED: Renamed from toggleInventoryModal) ---
-
         /**
          * Toggles the visibility of the inventory upload modal and updates its title/loading state.
          */
@@ -682,13 +635,22 @@
          * Renders the current state of the inventory items into the new catalog page.
          */
         function renderInventoryCatalog() {
-            // MODIFIED: Target the new catalog page's display area
             const catalogContainer = document.getElementById('inventory-catalog-page');
             const loadingSpinner = document.getElementById('catalog-loading');
             
             if (loadingSpinner) loadingSpinner.classList.add('hidden');
 
             if (!catalogContainer) return;
+
+            // Function to get the correct class for a tag type
+            const getTagClass = (type) => {
+                switch(type) {
+                    case 'top': return 'tag-top';
+                    case 'bottom': return 'tag-bottom';
+                    case 'shoe': return 'tag-shoe';
+                    default: return 'tag-accessory';
+                }
+            };
 
             if (inventoryItems.length === 0) {
                 catalogContainer.innerHTML = `
@@ -705,20 +667,39 @@
             }
 
             // MODIFIED: Use a grid layout for a visually appealing catalog
-            catalogContainer.innerHTML = `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                ${inventoryItems.map(item => `
-                    <div class="inventory-item-card ${selectedItemId === item.id ? 'ring-4 ring-primary' : ''} ${item.type === 'top' || item.type === 'bottom' ? '' : 'opacity-70 grayscale'}" data-item-id="${item.id}" role="button" tabindex="0" aria-selected="${selectedItemId === item.id}" onclick="selectInventoryItem('${item.id}')" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault(); selectInventoryItem('${item.id}');}">
-                        <img src="${item.imageUrl || 'https://placehold.co/250x250/FDE047/111827?text=?'}" alt="${item.type}" class="object-cover">
-                        <span class="inventory-type-tag">${item.type.toUpperCase()}</span>
-                        <div class="p-3 flex justify-between items-center">
-                            <span class="text-xs text-gray-500">Uploaded: ${new Date(item.timestamp).toLocaleDateString()}</span>
-                            <button onclick="event.stopPropagation(); deleteClothingItem('${item.id}')" class="text-red-500 hover:text-red-700 p-1 rounded-full bg-red-100 transition-colors" title="Delete Item">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </div>
+            let catalogHtml = `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">`;
+
+            // 1. Map existing inventory items (if any)
+            const itemCards = inventoryItems.map(item => `
+                <div class="inventory-item-card ${selectedItemId === item.id ? 'ring-4 ring-primary' : ''} ${item.type === 'top' || item.type === 'bottom' ? '' : 'opacity-70 grayscale'}" data-item-id="${item.id}" role="button" tabindex="0" aria-selected="${selectedItemId === item.id}" onclick="selectInventoryItem('${item.id}')" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault(); selectInventoryItem('${item.id}');}">
+                    <img src="${item.imageUrl || 'https://placehold.co/250x250/FDE047/111827?text=?'}" alt="${item.type}" class="object-cover">
+                    <span class="inventory-type-tag ${getTagClass(item.type)}">${item.type.toUpperCase()}</span>
+                    <div class="p-3 flex justify-end items-center">
+                        <button onclick="event.stopPropagation(); deleteClothingItem('${item.id}')" class="text-red-500 hover:text-red-700 p-1 rounded-full bg-red-100 transition-colors" title="Delete Item">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
                     </div>
-                `).join('')}
-            </div>`;
+                </div>
+            `).join('');
+
+            // 2. Define the static "Add Item" card
+            const addItemCard = `
+                <div onclick="toggleInventoryUploadModal(true)" 
+                     class="flex flex-col items-center justify-center p-6 rounded-xl border-4 border-dashed border-gray-300 bg-white hover:border-primary transition-colors cursor-pointer"
+                     style="height: 318px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                    <svg class="w-16 h-16 text-primary opacity-70 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-lg font-semibold text-gray-600">Add New Item</p>
+                    <p class="text-sm text-gray-400 mt-1">Click to upload image</p>
+                </div>
+            `;
+
+            // 3. Assemble and inject the HTML
+            catalogHtml += itemCards + addItemCard;
+            catalogHtml += `</div>`;
+
+            catalogContainer.innerHTML = catalogHtml;
         }
 
         function selectInventoryItem(itemId) {
@@ -753,7 +734,7 @@
                 selectedItemId = itemId;
                 currentStatus.canChefUp = isChefable;
                 if (!isChefable) {
-                     alert("Outfit suggestions can only be generated for 'Top' or 'Bottom' items.");
+                    alert("Outfit suggestions can only be generated for 'Top' or 'Bottom' items.");
                 }
             }
             checkNavigation();
@@ -761,7 +742,6 @@
 
         /**
          * Utility function to convert a file object to a base64 Data URL.
-         * NOTE: This is a MOCK for image storage. In a real app, Firebase Storage would be used.
          */
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
@@ -916,7 +896,7 @@
                 }
 
                 if (pageId === 'page-results') {
-                    generateOutfitCards(); // <--- RENDER ML RESULTS
+                    generateOutfitCards();
                 }
 
                 // MODIFIED: Show loading state for Inventory Catalog if it's not ready
@@ -963,22 +943,19 @@
                 }
             }
             
-            // MODIFIED: suggestionsButton now requires face analysis AND selected, chef-able item
+            // MODIFIED: Chef Up button visibility logic
             if (suggestionsButton) {
-                if (currentStatus.faceUploaded && currentStatus.canChefUp && selectedItemId && !currentStatus.isCheffingUp) { 
-                    suggestionsButton.disabled = false;
-                    suggestionsButton.classList.remove('opacity-50');
-                    suggestionsButton.textContent = 'Chef Up Outfits';
+                // The button is visible and enabled only if an item is selected, and analysis is done.
+                if (currentStatus.faceUploaded && currentStatus.canChefUp && selectedItemId) { 
+                    suggestionsButton.disabled = currentStatus.isCheffingUp;
+                    suggestionsButton.classList.remove('opacity-0');
+                    suggestionsButton.classList.add('opacity-80');
+                    suggestionsButton.textContent = currentStatus.isCheffingUp ? 'Cheffing Up...' : 'Chef Up Outfits';
                 } else {
+                    // Fades out immediately
+                    suggestionsButton.classList.add('opacity-0');
+                    suggestionsButton.classList.remove('opacity-80');
                     suggestionsButton.disabled = true;
-                    suggestionsButton.classList.add('opacity-50');
-                    if (currentStatus.isCheffingUp) {
-                        suggestionsButton.textContent = 'Cheffing Up...';
-                    } else if (!currentStatus.faceUploaded) {
-                        suggestionsButton.textContent = 'Complete Step 1';
-                    } else if (!currentStatus.canChefUp || !selectedItemId) {
-                         suggestionsButton.textContent = 'Select a Top/Bottom';
-                    }
                 }
             }
 
@@ -1023,6 +1000,9 @@
                     }
                 });
             }
+            
+            // NEW: Ensure dark mode button shows correct icon
+            initDarkMode();
         }
 
         // --- Core Analysis Submission Logic (Unchanged) ---
@@ -1150,7 +1130,7 @@
             const inventoryInput = document.getElementById('inventory-photo-input');
             if (inventoryInput && inventoryInput.files && inventoryInput.files.length > 0) {
                 const event = new Event('change');
-                inventoryInput.dispatchEvent(event);
+                input.dispatchEvent(event);
             }
         }, false);
         
@@ -1183,7 +1163,7 @@
 
             if (input.files.length > 0) {
                 statusDiv.innerHTML = `File selected: <span class="text-primary">${input.files[0].name}</span>. Click 'Analyze' to begin.`;
-                uploadText.textContent = `File Ready: ${input.files[0].name}`;
+                uploadText.textContent = 'File Ready: ' + input.files[0].name;
                 currentStatus.fileSelected = true;
             } else {
                 statusDiv.textContent = 'No file selected.';
@@ -1193,7 +1173,7 @@
             checkNavigation();
         }
 
-        // --- Color Palette Modal Logic (Unchanged) ---
+        // --- Color Palette Modal Logic (FIXED & RESTORED) ---
 
         function showColorPaletteModal(show) {
             const modal = document.getElementById('color-palette-modal');
@@ -1333,7 +1313,7 @@
             const generateColorSwatch = (colorName, hex) => {
                 const textColor = isLight(hex) ? '#111827' : '#FFFFFF'; 
                 return `
-                    <div class="large-color-item" style="background-color: ${hex}; color: ${textColor}; border: 1px solid ${hex === '#FFFFFF' ? '#D1D5DB' : 'transparent'};">
+                    <div class="large-color-item" style="background-color: ${hex}; color: ${textColor}; border: 1px solid ${hex === '#FFFFFF' ? (document.body.classList.contains('dark') ? '#4B5563' : '#D1D5DB') : 'transparent'};">
                         ${colorName}
                     </div>
                 `;
@@ -1361,21 +1341,23 @@
             }
         }
 
-
-        // --- Page 5 Logic (Results) (FINAL URL MAPPING) ---
+        // --- Page 5 Logic (Results) (RESTORED ORIGINAL + SLIDER LOGIC) ---
         function generateOutfitCards() {
-            const cardsContainer = document.getElementById('outfit-cards');
-            cardsContainer.innerHTML = ''; 
-            
+            const container = document.getElementById('outfit-slider');
+            container.innerHTML = ''; 
+            currentSlideIndex = 0;
+
             if (!outfitResults || !outfitResults.suggested_outfits || outfitResults.suggested_outfits.length === 0) {
-                 cardsContainer.innerHTML = `
-                    <div class="text-center py-20 md:col-span-2">
-                        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p class="text-xl text-gray-600 font-medium">No Outfit Suggestions Yet</p>
-                        <p class="text-md text-gray-500 mt-2">Go to the Inventory Catalog and select a Top or Bottom to 'Chef Up'.</p>
-                    </div>
-                `;
-                return;
+                 container.innerHTML = `
+                     <div class="outfit-slide flex justify-center py-4 text-center">
+                         <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm">
+                             <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                             <p class="text-xl text-gray-600 font-medium">No Recommendations Available</p>
+                             <p class="text-md text-gray-500 mt-2">Upload a Top or Bottom in your inventory and click 'Chef Up' to generate outfits.</p>
+                         </div>
+                     </div>
+                 `;
+                 return;
             }
             
             const originalItemType = outfitResults.original_item_type;
@@ -1383,31 +1365,77 @@
 
             outfitResults.suggested_outfits.forEach((imagePath, index) => {
                 
-                // 1. Clean the path provided by the ML model.
-                // It removes the local directory name ("apparel_dataset/")
-                // and ensures the path is clean for the send_from_directory function.
+                // Construct the public URL: /apparel_static/ followed by the relative path
                 let filename = imagePath.replace('apparel_dataset/', '');
-                
-                // 2. Construct the FINAL public URL using the new endpoint `/apparel_static/`
                 const imageUrl = `/apparel_static/${filename}`; 
 
                 const cardHtml = `
-                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-shadow duration-300 hover:shadow-2xl">
-                        
-                        <div class="w-full h-96 rounded-t-xl overflow-hidden shadow-md">
-                            <img src="${imageUrl}" alt="${suggestedType} ${index + 1}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+                    <div class="outfit-slide flex justify-center py-4">
+                        <div class="outfit-card bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 w-full max-w-sm">
+                            <div class="w-full h-96 rounded-t-xl overflow-hidden shadow-md">
+                                <img src="${imageUrl}" alt="${suggestedType}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="text-lg font-bold text-secondary mb-1">Outfit ${index + 1}</h4>
+                                <p class="text-sm text-gray-500">${suggestedType} suggestion.</p>
+                            </div>
                         </div>
-                        
-                        <div class="p-3 bg-gray-50 text-center">
-                            <span class="text-sm font-semibold text-primary">${suggestedType} Match #${index + 1}</span>
-                        </div>
-                        
                     </div>
                 `;
-                cardsContainer.insertAdjacentHTML('beforeend', cardHtml);
+                container.insertAdjacentHTML('beforeend', cardHtml);
             });
+            
+            updateSliderControls();
+            moveSlider(0); // Ensure slider snaps to the first card
         }
         
+        function moveSlider(direction) {
+            const slider = document.getElementById('outfit-slider');
+            if (!slider || !outfitResults || !outfitResults.suggested_outfits) return;
+
+            const totalSlides = outfitResults.suggested_outfits.length;
+            let newIndex = currentSlideIndex + direction;
+
+            if (newIndex < 0) {
+                newIndex = 0;
+            } else if (newIndex >= totalSlides) {
+                newIndex = totalSlides - 1;
+            }
+
+            // Calculate the slide width (including padding/margin if any)
+            // Use the offsetWidth of the container, divided by the number of slides shown (1 in this case)
+            const slideWidth = slider.offsetWidth; 
+            const offset = newIndex * slideWidth;
+            
+            slider.style.transform = `translateX(-${offset}px)`;
+            currentSlideIndex = newIndex;
+            
+            updateSliderControls();
+        }
+
+        function updateSliderControls() {
+            const prevButton = document.getElementById('slider-prev');
+            const nextButton = document.getElementById('slider-next');
+            if (!prevButton || !nextButton || !outfitResults || !outfitResults.suggested_outfits) return;
+            
+            const totalSlides = outfitResults.suggested_outfits.length;
+
+            prevButton.disabled = currentSlideIndex === 0;
+            nextButton.disabled = currentSlideIndex >= totalSlides - 1;
+
+            const displayStyle = totalSlides > 0 ? 'block' : 'none';
+            prevButton.style.display = displayStyle;
+            nextButton.style.display = displayStyle;
+        }
+
+        // Hook up slider controls after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+             const prevButton = document.getElementById('slider-prev');
+             const nextButton = document.getElementById('slider-next');
+             if (prevButton) prevButton.addEventListener('click', () => moveSlider(-1));
+             if (nextButton) nextButton.addEventListener('click', () => moveSlider(1));
+        });
+
         // --- NEW Chef Up Logic ---
         async function handleChefUp() {
             if (!selectedItemId || currentStatus.isCheffingUp || !currentStatus.faceUploaded) return;
@@ -1422,7 +1450,7 @@
             checkNavigation(); // Update button to 'Cheffing Up...'
 
             try {
-                const response = await fetch('/chef_up', {
+                const response = fetch('/chef_up', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1432,27 +1460,22 @@
                         imageUrl: selectedItem.imageUrl, // Send the Base64/URL to the backend
                         itemType: selectedItem.type,
                     }),
+                }).then(res => res.json()).then(data => {
+                    if (data.success) {
+                        outfitResults = {
+                            original_item_id: selectedItem.id,
+                            original_item_type: selectedItem.type,
+                            suggested_outfits: data.results
+                        };
+                        
+                        checkNavigation();
+                        currentSlideIndex = 0; // Reset slider position
+                        showPage('page-results');
+                    } else {
+                        alert(`Outfit Chef Up Failed: ${data.error || 'Server error.'}`);
+                    }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Update client-side variable with new results
-                    outfitResults = {
-                        original_item_id: selectedItem.id,
-                        original_item_type: selectedItem.type,
-                        suggested_outfits: data.results // The list of 5 paths
-                    };
-                    
-                    // Ensure the Outfits nav button is enabled now that we have results
-                    checkNavigation();
-                    
-                    // Navigate to the results page to show the new outfits
-                    showPage('page-results');
-                } else {
-                    const errorData = await response.json();
-                    alert(`Outfit Chef Up Failed: ${errorData.error || 'Server error.'}`);
-                }
             } catch (error) {
                 console.error('Chef Up Error:', error);
                 alert('Network error or server connection failed during Chef Up.');
@@ -1461,13 +1484,51 @@
                 checkNavigation();
             }
         }
+        
+        // --- Dark Mode Logic (NEW) ---
+        function setDarkMode(isDark) {
+            const body = document.body;
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+            
+            if (isDark) {
+                body.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                if (sunIcon && moonIcon) {
+                    moonIcon.classList.add('hidden');
+                    sunIcon.classList.remove('hidden');
+                }
+            } else {
+                body.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                if (sunIcon && moonIcon) {
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                }
+            }
+        }
 
+        function toggleDarkMode() {
+            const isDark = document.body.classList.contains('dark');
+            setDarkMode(!isDark);
+        }
+
+        function initDarkMode() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                setDarkMode(savedTheme === 'dark');
+            } else {
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                setDarkMode(prefersDark);
+            }
+        }
 
         // Initialize the app state
         window.onload = () => {
+            initDarkMode(); // 1. Initialize Dark Mode (Style)
+            
             const path = window.location.pathname;
             if (isAuthenticated && path.includes('upload_photo')) {
-                // MODIFIED: After login, go straight to Step 1: Face Analysis
                 showPage('page-face-upload');
             } else {
                 showPage('page-home');
