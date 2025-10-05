@@ -107,7 +107,12 @@
 
         /* --- DASHBOARD TEMPLATE CSS (CLEANUP & REFINEMENT) --- */
         .container { max-width: 1200px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 40px; }
+        /* MODIFIED: Centered Header */
+        .header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+            padding-top: 60px; 
+        }
         .header h1 { font-size: 32px; color: #1a1a2e; margin-bottom: 8px; }
         .header p { color: #6b7280; font-size: 16px; }
 
@@ -136,18 +141,25 @@
             border: 1px solid #9A9CFF; /* Slightly highlighted border on hover */
         }
 
+        /* MODIFIED: Minimalist Attribute Icon Style */
         .attribute-icon {
             width: 48px;
             height: 48px;
             margin: 0 auto 12px;
-            /* Use softer gradient background */
-            background: linear-gradient(135deg, #A5B4FC 0%, #818CF8 100%); /* Light/Medium Blue */
+            /* Minimalist color scheme from screenshot: Soft purple/blue background */
+            background: linear-gradient(135deg, #A5B4FC 0%, #818CF8 100%); 
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
             color: white; /* Icon color contrast */
+        }
+        /* New style for the icon SVG/Emoji inside the div */
+        .attribute-icon svg {
+             width: 24px;
+             height: 24px;
+             stroke-width: 2.5; /* Slightly bolder stroke for visibility */
         }
 
         .attribute-card h3 {
@@ -196,13 +208,13 @@
         }
 
         .color-circles {
-            /* MODIFIED: Center the swatches and space them equally */
+            /* MODIFIED: Center the swatches and space them equally (big circles, evenly spaced) */
             display: flex;
             justify-content: center; /* Center horizontally */
             align-items: center;
             flex-wrap: wrap;
             padding: 10px 0; /* Add vertical padding */
-            gap: 16px; /* Use gap for spacing between items */
+            gap: 16px; /* Use gap for spacing between items (ensures even spacing) */
         }
         
         /* Avoid Section (Refined Style) */
@@ -361,28 +373,33 @@
             </div>
         </section>
 
-        <section id="page-color-palette-dashboard" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
+        <section id="page-color-palette-dashboard" class="page hidden h-full p-4 sm:p-8 transition-opacity duration-500 overflow-y-auto">
             <div class="container">
                 <div class="header">
-                    <h1>Your Personalized Color Palette</h1>
+                    <h1 class="text-4xl font-extrabold text-secondary mb-2">Your Personalized Color Palette</h1>
                     <p>These recommendations are based on your unique facial features.</p>
                 </div>
 
                 <div class="attributes-grid" style="grid-template-columns: repeat(5, 1fr);">
+                    
                     <div class="attribute-card">
-                        <div class="attribute-icon">✨</div> 
+                        <div class="attribute-icon">
+                            <svg class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        </div> 
                         <h3>Season</h3>
                         <p id="circle-season">N/A</p>
                     </div>
 
                     <div class="attribute-card">
-                        <div class="attribute-icon">💍</div> 
+                        <div class="attribute-icon">
+                            <svg class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3m16 0h-2.285m-1.92 0a6.5 6.5 0 00-10.79 0m10.79 0l-2.062 2.062M18 12l2.062 2.062m-2.062-2.062L12 10.797m8.47 2.403a4.5 4.5 0 00-6.702 0"></path></svg>
+                        </div> 
                         <h3>Best Metal</h3>
                         <p id="circle-metal">N/A</p>
                     </div>
 
                     <div id="features-detail" style="display: contents;">
-                        </div>
+                    </div>
                 </div>
 
                 <div class="palette-section">
@@ -405,6 +422,8 @@
                         </div>
                 </div>
 
+                <div class="h-8 clear-both"></div> 
+
                 <div class="avoid-section">
                     <h2>
                         <span>🚫</span>
@@ -414,10 +433,6 @@
                 </div>
 
                 <div class="mt-10 text-center">
-                    <button onclick="showPage('page-inventory-catalog')" class="px-8 py-3 bg-primary text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-200">
-                        Go to Inventory (Step 2)
-                    </button>
-                </div>
             </div>
         </section>
         <section id="page-inventory-catalog" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
@@ -1264,6 +1279,26 @@
 
         // --- Color Palette Dashboard Logic (MODIFIED) ---
         
+        // NEW: SVG icons for the minimalist look
+        const iconMap = {
+            'season': `
+                <svg class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            `,
+            'metal': `
+                <svg class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3m16 0h-2.285m-1.92 0a6.5 6.5 0 00-10.79 0m10.79 0l-2.062 2.062M18 12l2.062 2.062m-2.062-2.062L12 10.797m8.47 2.403a4.5 4.5 0 00-6.702 0"></path></svg>
+            `,
+            'skin_tone': `
+                <svg class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            `,
+            'hair_color': `
+                <svg class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M11.05 15.65v-4m-3.5 4v-4m7 4v-4m3.5 4v-4M4 19a2 2 0 012-2h12a2 2 0 012 2M16 5l-2-2-2 2-2-2-2 2-2-2-2 2"></path></svg>
+            `,
+            'eye_color': `
+                <svg class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            `
+        };
+
+
         function populateColorPaletteDashboard(results) {
             if (!results) return;
 
@@ -1274,6 +1309,9 @@
             const avoidList = document.getElementById('avoid-colors-list');
             const circleSeason = document.getElementById('circle-season');
             const circleMetal = document.getElementById('circle-metal');
+            const seasonCardIcon = document.querySelector('#page-color-palette-dashboard .attributes-grid > .attribute-card:nth-child(1) .attribute-icon');
+            const metalCardIcon = document.querySelector('#page-color-palette-dashboard .attributes-grid > .attribute-card:nth-child(2) .attribute-icon');
+
 
             // Clear previous content
             featuresDetailDiv.innerHTML = '';
@@ -1284,13 +1322,16 @@
             // --- 1. Populate Season & Metal Summary (Features Card) ---
             circleSeason.textContent = results.color_palette.season || 'N/A';
             circleMetal.textContent = results.color_palette.best_metals ? results.color_palette.best_metals.join(', ') : 'N/A';
+            
+            // Inject new SVG icons
+            if (seasonCardIcon) seasonCardIcon.innerHTML = iconMap.season;
+            if (metalCardIcon) metalCardIcon.innerHTML = iconMap.metal;
 
             // --- 2. Populate Detailed Features List (Injecting new attribute-card style) ---
             const featureMap = {
-                // Icons from the template: Changed to abstract/professional Emojis
-                'skin_tone': { label: 'Skin Tone', icon: '👤' },
-                'hair_color': { label: 'Hair Color', icon: '💇' },
-                'eye_color': { label: 'Eye Color', icon: '👁️' },
+                'skin_tone': { label: 'Skin Tone', key: 'skin_tone' },
+                'hair_color': { label: 'Hair Color', key: 'hair_color' },
+                'eye_color': { label: 'Eye Color', key: 'eye_color' },
             };
             
             // Use an array to store the generated card HTML
@@ -1302,7 +1343,7 @@
                     // IMPORTANT: We use the classes from the new CSS template
                     featureCardsHtml += `
                         <div class="attribute-card">
-                            <div class="attribute-icon">${feature.icon}</div>
+                            <div class="attribute-icon">${iconMap[feature.key]}</div>
                             <h3>${feature.label}</h3>
                             <p>${results.features[key]}</p>
                         </div>
