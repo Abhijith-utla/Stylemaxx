@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StyleMaxx - Authenticated</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, deleteDoc, onSnapshot, collection, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Expose Firebase functions to the global scope for use in non-module scripts
+        window.firebaseImports = {
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
+            getFirestore, doc, addDoc, deleteDoc, onSnapshot, collection, query, setLogLevel
+        };
+    </script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -36,6 +48,10 @@
         .file-upload-area:hover {
             border-color: #9CA3AF;
             background-color: #F3F4F6;
+        }
+        .file-upload-area.has-file {
+            border-color: #4F46E5;
+            background-color: #F8FAFF;
         }
         
         /* --- Text Animation Keyframes (Unchanged) --- */
@@ -146,7 +162,7 @@
         }
 
         /* Styles for the larger, redesigned Color Palette Modal (Unchanged width/height) */
-        #color-palette-content {
+        #color-palette-content, #inventory-upload-content {
             height: 85vh; 
             max-height: 800px; 
             max-width: 800px; 
@@ -208,6 +224,36 @@
             letter-spacing: 0.05em;
         }
 
+        /* Custom style for the Inventory Catalog items */
+        .inventory-item-card {
+            position: relative;
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.2s ease;
+        }
+        .inventory-item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+        }
+        .inventory-item-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+        .inventory-type-tag {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 4px 8px;
+            background-color: rgba(79, 70, 229, 0.9); /* Primary color with transparency */
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 6px;
+        }
+
     </style>
 </head>
 <body class="h-screen overflow-hidden">
@@ -226,8 +272,20 @@
             </svg>
         </div>
 
-
-        <header id="status-bar" class="absolute top-0 left-0 right-0 p-4 z-40 bg-white shadow-md flex justify-between items-center transition-opacity duration-300 opacity-0 hidden">
+        <header id="status-bar" class="absolute top-0 left-0 right-0 p-4 z-40 bg-white shadow-md flex justify-between items-center transition-opacity duration-300 opacity-0 hidden" data-initial-html="
+            <div class='flex items-center space-x-3'>
+                {% if user %}
+                    <img src='{{ user.picture | default('https://placehold.co/40x40/4F46E5/ffffff?text=U') }}' alt='User Avatar' class='w-10 h-10 rounded-full border-2 border-primary'>
+                    <span class='text-sm font-semibold text-secondary'>Hello, {{ user.name | default(user.email) | default('User') }}</span>
+                {% else %}
+                    <span class='text-sm font-semibold text-gray-500'>Welcome Guest</span>
+                {% endif %}
+            </div>
+            {% if user %}
+                <a href='/logout' class='text-sm font-medium text-red-600 hover:text-red-800 transition-colors duration-200 py-2 px-4 rounded-full bg-red-50'>Logout</a>
+            {% else %}
+            {% endif %}
+        ">
             <div class="flex items-center space-x-3">
                 {% if user %}
                     <img src="{{ user.picture | default('https://placehold.co/40x40/4F46E5/ffffff?text=U') }}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-primary">
@@ -290,31 +348,45 @@
             </div>
         </section>
 
-        <section id="page-style-upload" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
-            <div class="max-w-4xl mx-auto h-full flex flex-col z-20 pb-20">
-                <div class="flex justify-center items-center mb-6">
-                    <h2 class="text-3xl font-bold text-secondary text-center">Step 2: Define Your Style</h2>
+        <section id="page-inventory-catalog" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
+            <div class="max-w-6xl mx-auto h-full flex flex-col z-20 pb-20">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h2 class="text-3xl font-bold text-secondary">Step 2: Smart Inventory Catalog</h2>
+                    <button onclick="toggleInventoryUploadModal(true)" class="px-4 py-2 bg-primary text-white font-medium rounded-full shadow-md hover:bg-indigo-700 transition-colors duration-200 flex items-center">
+                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Add Item
+                    </button>
                 </div>
+                
+                <p class="text-md text-gray-500 mb-8">All your uploaded clothing items are displayed here. Use them to create new outfits!</p>
 
-                <div id="style-upload-area" class="file-upload-area flex flex-col items-center justify-center p-6 sm:p-12 rounded-xl h-96 w-full shadow-lg cursor-pointer">
-                    <svg class="w-12 h-12 text-primary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <p class="text-lg font-medium text-secondary">Upload a picture of your desired style</p>
-                    <p class="text-sm text-gray-500 mt-1 text-center">This helps us understand your fashion preferences.</p>
-                    <input type="file" id="style-photo-input" accept="image/*" class="hidden" onchange="handleStyleUpload()">
+                <div id="inventory-catalog-page" class="flex-grow">
+                    </div>
+                
+                <div id="catalog-loading" class="text-center py-10 hidden">
+                    <svg class="animate-spin h-8 w-8 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-sm text-gray-500 mt-3">Loading Smart Inventory...</p>
                 </div>
-                <div id="style-upload-status" class="mt-4 text-center font-medium text-gray-600"></div>
 
                 <div class="mt-auto py-8 flex justify-center">
-                    <button onclick="showPage('page-results')" class="px-12 py-4 bg-accent text-secondary font-bold text-lg rounded-full shadow-xl hover:bg-yellow-400 transition-colors duration-200 opacity-50" id="suggestions-button" disabled>
-                        Get Style Suggestions
+                    <button onclick="handleChefUp()" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-12 py-4 bg-accent text-secondary font-bold text-lg rounded-full shadow-xl hover:bg-yellow-400 transition-colors duration-200 opacity-80 backdrop-blur-sm" id="suggestions-button" disabled>
+                        Chef Up Outfits
                     </button>
                 </div>
             </div>
+            <!-- Floating Add Inventory Item button -->
+            <button onclick="toggleInventoryUploadModal(true)" aria-label="Add Inventory Item" class="fixed bottom-24 right-6 sm:bottom-16 sm:right-8 z-40 w-14 h-14 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition transform">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path></svg>
+            </button>
         </section>
+
 
         <section id="page-results" class="page hidden h-full p-4 sm:p-8 pt-20 transition-opacity duration-500 overflow-y-auto">
             <div class="max-w-6xl mx-auto pb-10 z-20">
-                <h2 class="text-3xl font-bold text-secondary mb-8 text-center">Your StyleMaxx Outfit Pairs</h2>
+                <h2 class="text-3xl font-bold text-secondary mb-8 text-center">Step 3: Your StyleMaxx Outfit Pairs</h2>
 
                 <div id="outfit-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     </div>
@@ -327,36 +399,47 @@
 
     </div>
 
-    <div id="inventory-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 sm:p-8 rounded-xl max-w-lg w-full shadow-2xl relative">
-            <button onclick="toggleInventoryModal(false)" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+    <div id="inventory-upload-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 sm:p-8">
+        <div id="inventory-upload-content" class="bg-white p-6 sm:p-8 rounded-xl w-full shadow-2xl relative modal-fade-in" onclick="event.stopPropagation()">
+            <button onclick="toggleInventoryUploadModal(false)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
-            <h3 class="text-2xl font-bold text-secondary mb-6">Smart Inventory Uploader</h3>
-            
-            <div class="space-y-4">
-                <select id="clothing-type-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
-                    <option value="">Select Clothing Type</option>
-                    <option value="top">Top (Shirt, Jacket, Sweater)</option>
-                    <option value="bottom">Bottom (Pants, Skirt, Shorts)</option>
-                    <option value="accessory">Accessory</option>
-                </select>
+            <h3 class="text-3xl font-bold text-primary mb-1 text-center">Add New Item</h3>
+            <!-- Minimal subtitle removed for cleaner UI -->
 
-                <div id="inventory-upload-area" class="file-upload-area flex flex-col items-center justify-center p-6 rounded-xl h-48 w-full">
-                    <svg class="w-8 h-8 text-primary mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <p class="text-base font-medium text-secondary">Upload Clothing Piece</p>
-                    <p class="text-xs text-gray-500 mt-1">Select type above first.</p>
-                    <input type="file" id="inventory-photo-input" accept="image/*" class="hidden">
+            <div class="bg-gray-50 p-4 rounded-xl shadow-inner mb-6">
+                <h4 class="text-xl font-semibold text-primary mb-3 text-center">Item Details</h4>
+                <div class="space-y-4">
+                    <select id="clothing-type-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                        <option value="">Select Clothing Type</option>
+                        <option value="top">Top (Shirt, Jacket, Sweater)</option>
+                        <option value="bottom">Bottom (Pants, Skirt, Shorts)</option>
+                        <option value="shoe">Shoe</option>
+                        <option value="accessory">Accessory</option>
+                        <option value="outerwear">Outerwear (Coat, Blazer)</option>
+                    </select>
+
+                    <div id="inventory-upload-area" class="file-upload-area flex flex-col items-center justify-center p-6 rounded-xl h-36 w-full cursor-pointer">
+                        <svg class="w-8 h-8 text-primary mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p class="sr-only" id="inventory-upload-text">Upload Clothing Image</p>
+                        <div id="inventory-preview" class="mt-2 hidden">
+                            <img id="inventory-preview-img" class="h-20 w-20 object-cover rounded-lg shadow" alt="Selected preview" />
+                        </div>
+                        <input type="file" id="inventory-photo-input" accept="image/*" class="hidden">
+                    </div>
                 </div>
-            </div>
 
-            <button class="mt-6 w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-200">
-                Add to Inventory (Mock)
-            </button>
-            <p class="text-xs text-center text-gray-400 mt-2">Note: This is a frontend simulation. Backend processing would occur here.</p>
+                <button onclick="uploadClothingItem()" class="mt-4 w-full py-3 bg-primary text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition-colors duration-200" id="inventory-submit-button">
+                    Add to Inventory
+                </button>
+                <div id="inventory-message" class="text-center text-sm mt-2 font-medium"></div>
+            </div>
+            
+            <!-- Minimal footer note removed -->
         </div>
     </div>
-    
+
+
     <div id="color-palette-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 sm:p-8">
         <div id="color-palette-content" class="bg-white p-6 sm:p-8 rounded-xl w-full shadow-2xl relative modal-fade-in" onclick="event.stopPropagation()">
             <button onclick="showColorPaletteModal(false)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors">
@@ -413,29 +496,382 @@
             <span class="text-xs mt-0.5">Palette</span>
         </button>
 
-        <button onclick="showPage('page-style-upload')" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors disabled:opacity-50" id="style-nav-button" disabled>
+        <button onclick="showPage('page-inventory-catalog')" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors" id="inventory-nav-button">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4M4 11l8 4 8-4m-8 4v7M4 7v10l8 4 8-4V7"></path></svg>
+            <span class="text-xs mt-0.5">Inventory</span>
+        </button>
+        
+        <button onclick="showPage('page-results')" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors disabled:opacity-50" id="style-nav-button" disabled>
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6h6m4 6a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6h6"></path></svg>
-            <span class="text-xs mt-0.5">Style</span>
+            <span class="text-xs mt-0.5">Outfits</span>
         </button>
 
     </div>
 
-
     <script>
-        // Variable populated by Flask/Jinja to track authentication status
+        // The firebase_config object is safely passed as a JSON string via Jinja.
+        const __firebase_config = '{{ firebase_config | tojson }}';
+        // The app ID is passed for constructing the Firestore path.
+        const __app_id = '{{ firebase_app_id | default("default-app-id") }}';
+        // Note: __initial_auth_token is kept as null for this version, relying on signInAnonymously if needed.
+        const __initial_auth_token = null;
+    </script>
+    <script>
+        // --- Firebase/Firestore Global Vars & Setup ---
+        let db, auth, userId = null;
+        let unsubscribeInventory = null;
+        let inventoryItems = [];
+        let isAuthReady = false; // New state flag to ensure auth is complete
+        let selectedItemId = null; // single-select for catalog
+        let isInventoryUploadInFlight = false; // prevent double adds
+        
         const isAuthenticated = "{% if user %}true{% else %}false{% endif %}" === "true";
-        // New variable to hold backend color results
         let colorPaletteResults = JSON.parse('{{ color_results | tojson }}'); 
         
-        // --- Navigation and State Management (Unchanged) ---
         let currentStatus = {
             faceUploaded: !!colorPaletteResults, 
-            styleUploaded: false
+            styleUploaded: false, // Renamed to style uploaded but will function as 'can_suggest'
+            isAnalyzing: false
         };
 
-        const pages = ['page-home', 'page-auth-prompt', 'page-face-upload', 'page-style-upload', 'page-results'];
-        const navButtons = ['home-nav-button', 'palette-nav-button', 'style-nav-button'];
+        // MODIFIED: 'page-style-upload' changed to 'page-inventory-catalog'
+        const pages = ['page-home', 'page-auth-prompt', 'page-face-upload', 'page-inventory-catalog', 'page-results'];
+        // MODIFIED: Nav buttons updated, removed 'style-nav-button' reference (it's now 'style-nav-button' for 'page-results')
+        const navButtons = ['home-nav-button', 'palette-nav-button', 'inventory-nav-button', 'style-nav-button'];
 
+
+        /**
+         * Initializes Firebase, signs in the user, and sets up the Firestore listener.
+         */
+        async function setupFirebase() {
+            const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, setLogLevel } = window.firebaseImports;
+            
+            try {
+                // MODIFIED: Global variables are now defined above via Flask injection
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+                if (!firebaseConfig || !firebaseConfig.apiKey) {
+                    console.error("Firebase config is missing.");
+                    return;
+                }
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('Debug'); // Enable logging for debugging
+
+                // Sign in using custom token or anonymously
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Wait for auth state to be ready
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase Auth Ready. User ID:", userId);
+                    } else {
+                        userId = crypto.randomUUID(); // Fallback for unauthenticated user
+                        console.log("Signed in anonymously. User ID:", userId);
+                    }
+                    isAuthReady = true; // Set flag once auth process finishes
+                    setupFirestoreListener(); // Start listening to inventory data now that userId is set
+                    checkNavigation();
+                });
+
+            } catch (e) {
+                console.error("Firebase setup error:", e);
+            }
+        }
+
+        /**
+         * Returns the Firestore collection reference for the user's private inventory.
+         */
+        function getInventoryCollectionRef() {
+            if (!db || !userId) {
+                console.error("Database or User ID not initialized.");
+                return null;
+            }
+            const { collection } = window.firebaseImports;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            // Private data collection path: /artifacts/{appId}/users/{userId}/clothing_inventory
+            return collection(db, `artifacts/${appId}/users/${userId}/clothing_inventory`);
+        }
+
+        /**
+         * Sets up a real-time listener for the user's clothing inventory.
+         */
+        function setupFirestoreListener() {
+            if (unsubscribeInventory) {
+                unsubscribeInventory(); // Stop listening if already active
+            }
+
+            const inventoryRef = getInventoryCollectionRef();
+            if (!inventoryRef) return;
+
+            const { query, onSnapshot } = window.firebaseImports;
+            const q = query(inventoryRef);
+            
+            unsubscribeInventory = onSnapshot(q, (snapshot) => {
+                // Ensure we only process if auth is confirmed (prevents double-load/errors)
+                if (isAuthReady) { 
+                    inventoryItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    console.log("Inventory updated. Total items:", inventoryItems.length);
+                    // MODIFIED: Check if we have enough items for suggestions
+                    currentStatus.styleUploaded = inventoryItems.length > 0;
+                    renderInventoryCatalog(); // Update the new page
+                    checkNavigation(); // Update suggestions button state
+                }
+            }, (error) => {
+                console.error("Error listening to inventory:", error);
+            });
+        }
+
+
+        // --- Inventory Upload Modal Functions (MODIFIED: Renamed from toggleInventoryModal) ---
+
+        /**
+         * Toggles the visibility of the inventory upload modal and updates its title/loading state.
+         */
+        function toggleInventoryUploadModal(show) {
+            const modal = document.getElementById('inventory-upload-modal');
+            const content = document.getElementById('inventory-upload-content');
+            const messageArea = document.getElementById('inventory-message');
+            
+            // MODIFIED: Show catalog loading spinner when trying to open if auth isn't ready
+            const catalogLoading = document.getElementById('catalog-loading');
+            if (catalogLoading) catalogLoading.classList.add('hidden');
+
+
+            if (show) {
+                if (!isAuthReady) {
+                    messageArea.innerHTML = '<span class="text-primary animate-pulse">Initializing database connection...</span>';
+                    setTimeout(() => {
+                        if (!isAuthReady) {
+                             messageArea.innerHTML = '<span class="text-red-600">Database initialization failed. Please try reloading.</span>';
+                        }
+                    }, 500); 
+                    return;
+                }
+                
+                if (!isAuthenticated) {
+                    messageArea.innerHTML = '<span class="text-red-600">Inventory requires authentication. Please log in first.</span>';
+                    return;
+                }
+
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.add('is-visible');
+                }, 10);
+                
+                messageArea.innerHTML = ''; // Clear status message on successful open
+
+            } else {
+                content.classList.remove('is-visible');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300); 
+            }
+        }
+
+        /**
+         * Renders the current state of the inventory items into the new catalog page.
+         */
+        function renderInventoryCatalog() {
+            // MODIFIED: Target the new catalog page's display area
+            const catalogContainer = document.getElementById('inventory-catalog-page');
+            const loadingSpinner = document.getElementById('catalog-loading');
+            
+            if (loadingSpinner) loadingSpinner.classList.add('hidden');
+
+            if (!catalogContainer) return;
+
+            if (inventoryItems.length === 0) {
+                catalogContainer.innerHTML = `
+                    <div class="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl bg-white">
+                        <svg class="w-12 h-12 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <p class="text-lg text-gray-600 mt-3 font-medium">Your Smart Inventory is Empty.</p>
+                        <p class="text-sm text-gray-500 mt-1">Add a new item to get personalized outfit suggestions.</p>
+                        <button onclick="toggleInventoryUploadModal(true)" class="mt-4 px-6 py-2 bg-primary text-white font-medium rounded-full hover:bg-indigo-700 transition-colors">
+                            Add First Item
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // MODIFIED: Use a grid layout for a visually appealing catalog
+            catalogContainer.innerHTML = `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                ${inventoryItems.map(item => `
+                    <div class="inventory-item-card ${selectedItemId === item.id ? 'ring-4 ring-primary' : ''}" data-item-id="${item.id}" role="button" tabindex="0" aria-selected="${selectedItemId === item.id}" onclick="selectInventoryItem('${item.id}')" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault(); selectInventoryItem('${item.id}');}">
+                        <img src="${item.imageUrl || 'https://placehold.co/250x250/FDE047/111827?text=?'}" alt="${item.type}" class="object-cover">
+                        <span class="inventory-type-tag">${item.type.toUpperCase()}</span>
+                        <div class="p-3 flex justify-between items-center">
+                            <span class="text-xs text-gray-500">Uploaded: ${new Date(item.timestamp).toLocaleDateString()}</span>
+                            <button onclick="event.stopPropagation(); deleteClothingItem('${item.id}')" class="text-red-500 hover:text-red-700 p-1 rounded-full bg-red-100 transition-colors" title="Delete Item">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        function selectInventoryItem(itemId) {
+            // Instant visual update without full re-render to avoid flicker
+            if (selectedItemId && selectedItemId !== itemId) {
+                const prev = document.querySelector(`[data-item-id="${selectedItemId}"]`);
+                if (prev) {
+                    prev.classList.remove('ring-4', 'ring-primary');
+                    prev.setAttribute('aria-selected', 'false');
+                }
+            }
+            if (selectedItemId === itemId) {
+                // Deselect
+                const curr = document.querySelector(`[data-item-id="${itemId}"]`);
+                if (curr) {
+                    curr.classList.remove('ring-4', 'ring-primary');
+                    curr.setAttribute('aria-selected', 'false');
+                }
+                selectedItemId = null;
+            } else {
+                // Select
+                const curr = document.querySelector(`[data-item-id="${itemId}"]`);
+                if (curr) {
+                    curr.classList.add('ring-4', 'ring-primary');
+                    curr.setAttribute('aria-selected', 'true');
+                }
+                selectedItemId = itemId;
+            }
+            checkNavigation();
+        }
+
+        /**
+         * Utility function to convert a file object to a base64 Data URL.
+         * NOTE: This is a MOCK for image storage. In a real app, Firebase Storage would be used.
+         */
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /**
+         * Handles the clothing item upload and saves metadata to Firestore.
+         */
+        async function uploadClothingItem() {
+            const fileInput = document.getElementById('inventory-photo-input');
+            const typeSelect = document.getElementById('clothing-type-select');
+            const submitButton = document.getElementById('inventory-submit-button');
+            const messageArea = document.getElementById('inventory-message');
+
+            if (typeSelect.value === "") {
+                messageArea.innerHTML = '<span class="text-red-600">Please select a Clothing Type.</span>';
+                return;
+            }
+            if (fileInput.files.length === 0) {
+                messageArea.innerHTML = '<span class="text-red-600">Please select an image to upload.</span>';
+                return;
+            }
+            // Check auth ready state before proceeding with upload
+            if (!db) {
+                messageArea.innerHTML = '<span class="text-red-600">Error: Database not initialized.</span>';
+                return;
+            }
+            if (!isAuthReady) {
+                messageArea.innerHTML = '<span class="text-red-600">Error: Auth not ready. Please wait a moment and try again.</span>';
+                return;
+            }
+            if (!userId) {
+                messageArea.innerHTML = '<span class="text-red-600">Error: Missing user identity. Try reloading and signing in again.</span>';
+                return;
+            }
+            
+            submitButton.disabled = true;
+            submitButton.textContent = 'Uploading...';
+            messageArea.innerHTML = '<span class="text-primary animate-pulse">Processing file...</span>';
+
+            try {
+                if (isInventoryUploadInFlight) {
+                    return;
+                }
+                isInventoryUploadInFlight = true;
+                const file = fileInput.files[0];
+                const base64Image = await fileToBase64(file); // Mock image storage
+
+                const newItem = {
+                    type: typeSelect.value,
+                    imageUrl: base64Image, 
+                    timestamp: Date.now(),
+                };
+
+                const { addDoc } = window.firebaseImports;
+                const colRef = getInventoryCollectionRef();
+                if (!colRef) {
+                    messageArea.innerHTML = '<span class="text-red-600">Error: Inventory path unavailable.</span>';
+                    return;
+                }
+                
+                const docRef = await addDoc(colRef, newItem);
+                messageArea.innerHTML = '<span class="text-green-600">Added!</span>';
+                // Optimistic update so the new card appears immediately
+                if (!inventoryItems.some(item => item.id === docRef.id)) {
+                    inventoryItems = [{ id: docRef.id, ...newItem }, ...inventoryItems];
+                }
+                renderInventoryCatalog();
+                checkNavigation();
+                // Close modal to reveal catalog update
+                toggleInventoryUploadModal(false);
+                
+                // Reset form
+                typeSelect.value = "";
+                fileInput.value = "";
+                document.getElementById('inventory-upload-text').textContent = 'Upload Clothing Image';
+
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                const code = (e && e.code) ? ` (${e.code})` : '';
+                messageArea.innerHTML = `<span class="text-red-600">Upload failed${code}: ${e.message || 'Unknown error'}.</span>`;
+                if (e && e.code === 'permission-denied') {
+                    messageArea.innerHTML += '<div class="text-xs text-gray-500 mt-1">Check Firestore rules to allow authenticated/anonymous writes for development.</div>';
+                }
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add to Inventory';
+                isInventoryUploadInFlight = false;
+            }
+        }
+
+        /**
+         * Deletes a clothing item from Firestore.
+         */
+        async function deleteClothingItem(itemId) {
+            // Check auth ready state before proceeding with deletion
+            if (!db || !userId || !isAuthReady) {
+                console.error("Database or User ID not initialized.");
+                return;
+            }
+            
+            const { doc, deleteDoc } = window.firebaseImports;
+            const colRef = getInventoryCollectionRef();
+            
+            try {
+                const docRef = doc(colRef, itemId);
+                await deleteDoc(docRef);
+                // Real-time listener handles UI update
+            } catch (e) {
+                console.error("Error removing document: ", e);
+            }
+        }
+
+        // --- Existing Navigation and State Management (Retained and Updated) ---
 
         function showPage(pageId) {
             pages.forEach(id => {
@@ -449,6 +885,9 @@
             const nextPage = document.getElementById(pageId);
             const statusBar = document.getElementById('status-bar');
             const bottomNav = document.getElementById('bottom-nav');
+            // MODIFIED: Show loading spinner for catalog page
+            const catalogLoading = document.getElementById('catalog-loading');
+
 
             if (nextPage) {
                 const displayClass = (pageId === 'page-home' || pageId === 'page-auth-prompt') ? 'flex' : 'block';
@@ -470,16 +909,24 @@
                 if (pageId === 'page-results') {
                     generateOutfitCards();
                 }
+
+                // MODIFIED: Show loading state for Inventory Catalog if it's not ready
+                if (pageId === 'page-inventory-catalog') {
+                     if (!isAuthReady) {
+                        if (catalogLoading) catalogLoading.classList.remove('hidden');
+                        document.getElementById('inventory-catalog-page').innerHTML = ''; // Clear content
+                    } else {
+                         // Rerender immediately to show current data
+                         renderInventoryCatalog(); 
+                    }
+                }
             }
         }
 
         document.getElementById('page-home').addEventListener('click', () => {
             if (isAuthenticated) {
-                if (currentStatus.faceUploaded) {
-                    showPage('page-style-upload');
-                } else {
-                    showPage('page-face-upload');
-                }
+                // MODIFIED: Always go to Step 1: Color Palette Analysis after login/home click
+                showPage('page-face-upload');
             } else {
                 showPage('page-auth-prompt'); 
             }
@@ -491,6 +938,11 @@
             const suggestionsButton = document.getElementById('suggestions-button');
             const paletteNavButton = document.getElementById('palette-nav-button');
             const styleNavButton = document.getElementById('style-nav-button');
+            const homeNavButton = document.getElementById('home-nav-button');
+            const inventoryNavButton = document.getElementById('inventory-nav-button'); // New element to check
+
+            // MODIFIED: Only enable if authenticated
+            const navButtonsToEnable = [homeNavButton, inventoryNavButton];
 
             if (faceNextButton) {
                 if (document.getElementById('face-photo-input').files.length > 0 && !currentStatus.isAnalyzing) {
@@ -502,8 +954,9 @@
                 }
             }
             
+            // MODIFIED: suggestionsButton now requires face analysis AND at least one item in inventory
             if (suggestionsButton) {
-                if (currentStatus.styleUploaded && currentStatus.faceUploaded) {
+                if (currentStatus.faceUploaded && currentStatus.styleUploaded && selectedItemId) { 
                     suggestionsButton.disabled = false;
                     suggestionsButton.classList.remove('opacity-50');
                 } else {
@@ -512,23 +965,46 @@
                 }
             }
 
-            if (paletteNavButton) {
-                if (currentStatus.faceUploaded) {
-                    paletteNavButton.disabled = false;
-                    paletteNavButton.classList.remove('opacity-50');
-                } else {
+            if (currentStatus.faceUploaded) {
+                navButtonsToEnable.push(paletteNavButton);
+                // MODIFIED: 'Style' nav button is now 'Outfits' (page-results), but we only enable it if we also have clothes.
+                if (currentStatus.styleUploaded) {
+                    navButtonsToEnable.push(styleNavButton);
+                }
+            }
+
+            // Enable the collected buttons if they are authenticated
+            if (isAuthenticated) {
+                navButtonsToEnable.forEach(btn => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50');
+                    }
+                });
+            }
+            
+            // Re-apply disabled state to those that shouldn't be touched by the block above
+            if (!currentStatus.faceUploaded) {
+                if (paletteNavButton) {
                     paletteNavButton.disabled = true;
                     paletteNavButton.classList.add('opacity-50');
                 }
             }
-            if (styleNavButton) {
-                if (currentStatus.faceUploaded) {
-                    styleNavButton.disabled = false;
-                    styleNavButton.classList.remove('opacity-50');
-                } else {
+            if (!currentStatus.styleUploaded || !currentStatus.faceUploaded) {
+                if (styleNavButton) {
                     styleNavButton.disabled = true;
                     styleNavButton.classList.add('opacity-50');
                 }
+            }
+            
+            // If not authenticated, disable all but 'Home' for general flow
+             if (!isAuthenticated) {
+                [paletteNavButton, inventoryNavButton, styleNavButton].forEach(btn => {
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50');
+                    }
+                });
             }
         }
 
@@ -566,14 +1042,16 @@
                     colorPaletteResults = data.results; 
                     currentStatus.faceUploaded = true;
                     statusDiv.innerHTML = `<span class="text-green-600 font-semibold">${data.message} Analysis Complete!</span>`;
-                    faceNextButton.textContent = 'Go to Step 2: Style';
+                    faceNextButton.textContent = 'Analyze';
                     
                     setTimeout(() => {
-                        showPage('page-style-upload');
+                        // MODIFIED: After analysis, go to the inventory catalog page
+                        showPage('page-inventory-catalog');
                     }, 1000);
                     
                 } else {
                     const errorData = await response.json();
+                    // NOTE: Custom modal UI should be used here instead of alert/confirm
                     statusDiv.innerHTML = `<span class="text-red-600 font-semibold">Error: ${errorData.error || 'Failed to analyze face.'}</span>`;
                     faceNextButton.textContent = 'Retry Analysis';
                 }
@@ -589,33 +1067,82 @@
         }
 
 
-        // --- File Upload and Drag/Drop Logic (Unchanged) ---
+        // --- File Upload and Drag/Drop Logic (Unchanged except for removal of style upload) ---
 
         document.getElementById('face-upload-area').addEventListener('click', () => {
             if (!currentStatus.isAnalyzing) {
                 document.getElementById('face-photo-input').click();
             }
         });
-        document.getElementById('style-upload-area').addEventListener('click', () => {
-            document.getElementById('style-photo-input').click();
+        // REMOVED: Style Upload event listener
+        // document.getElementById('style-upload-area').addEventListener('click', () => { ... });
+
+        // Hook up change listener for inventory input
+        document.addEventListener('DOMContentLoaded', () => {
+            const inventoryInput = document.getElementById('inventory-photo-input');
+            const inventoryArea = document.getElementById('inventory-upload-area');
+            const previewWrap = document.getElementById('inventory-preview');
+            const previewImg = document.getElementById('inventory-preview-img');
+            if (inventoryInput) {
+                inventoryInput.addEventListener('change', () => {
+                    const files = inventoryInput.files;
+                    if (files.length > 0) {
+                        // Minimal UI: only show subtle feedback
+                        document.getElementById('inventory-upload-text').textContent = `Selected: ${files[0].name}`;
+                        // Show visual state on drop area
+                        inventoryArea.classList.add('has-file');
+                        // Preview image
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            if (previewImg && previewWrap) {
+                                previewImg.src = e.target.result;
+                                previewWrap.classList.remove('hidden');
+                            }
+                        };
+                        reader.readAsDataURL(files[0]);
+                        document.getElementById('inventory-message').innerHTML = '';
+                    } else {
+                        document.getElementById('inventory-upload-text').textContent = 'Upload Clothing Image';
+                        inventoryArea.classList.remove('has-file');
+                        if (previewWrap) previewWrap.classList.add('hidden');
+                    }
+                });
+            }
+            if (inventoryArea && inventoryInput) {
+                inventoryArea.addEventListener('click', () => {
+                    inventoryInput.click();
+                });
+            }
         });
         
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             document.getElementById('face-upload-area').addEventListener(eventName, preventDefaults, false);
-            document.getElementById('style-upload-area').addEventListener(eventName, preventDefaults, false);
+            // REMOVED: Style Upload drag/drop listeners
+            document.getElementById('inventory-upload-area').addEventListener(eventName, preventDefaults, false);
         });
         
         ['dragenter', 'dragover'].forEach(eventName => {
             document.getElementById('face-upload-area').addEventListener(eventName, () => document.getElementById('face-upload-area').classList.add('ring-2', 'ring-primary'), false);
-            document.getElementById('style-upload-area').addEventListener(eventName, () => document.getElementById('style-upload-area').classList.add('ring-2', 'ring-primary'), false);
+            // REMOVED: Style Upload drag/drop ring
+            document.getElementById('inventory-upload-area').addEventListener(eventName, () => document.getElementById('inventory-upload-area').classList.add('ring-2', 'ring-primary'), false);
         });
         ['dragleave', 'drop'].forEach(eventName => {
             document.getElementById('face-upload-area').addEventListener(eventName, () => document.getElementById('face-upload-area').classList.remove('ring-2', 'ring-primary'), false);
-            document.getElementById('style-upload-area').addEventListener(eventName, () => document.getElementById('style-upload-area').classList.remove('ring-2', 'ring-primary'), false);
+            // REMOVED: Style Upload drag/drop ring
+            document.getElementById('inventory-upload-area').addEventListener(eventName, () => document.getElementById('inventory-upload-area').classList.remove('ring-2', 'ring-primary'), false);
         });
         
         document.getElementById('face-upload-area').addEventListener('drop', handleDrop.bind(null, 'face-photo-input'), false);
-        document.getElementById('style-upload-area').addEventListener('drop', handleDrop.bind(null, 'style-photo-input'), false);
+        // REMOVED: Style Upload drop handler
+        document.getElementById('inventory-upload-area').addEventListener('drop', (e) => {
+            handleDrop('inventory-photo-input', e);
+            // Mirror change handler for preview and UI state
+            const inventoryInput = document.getElementById('inventory-photo-input');
+            if (inventoryInput && inventoryInput.files && inventoryInput.files.length > 0) {
+                const event = new Event('change');
+                inventoryInput.dispatchEvent(event);
+            }
+        }, false);
         
         function preventDefaults (e) {
             e.preventDefault();
@@ -631,11 +1158,13 @@
                 input.files = files;
                 if (targetInputId === 'face-photo-input') {
                     handleFaceUpload();
-                } else if (targetInputId === 'style-photo-input') {
-                    handleStyleUpload();
+                // REMOVED: Style Upload drop logic
+                } else if (targetInputId === 'inventory-photo-input') {
+                    // Call the change event logic explicitly for consistency
+                    const event = new Event('change');
+                    input.dispatchEvent(event);
                 }
             }
-            // Note: The inventory upload area drop handling is still required for the modal, but its JS functions aren't defined here.
         }
 
         function handleFaceUpload() {
@@ -644,7 +1173,7 @@
             const uploadText = document.getElementById('upload-text');
 
             if (input.files.length > 0) {
-                statusDiv.innerHTML = `File selected: <span class="text-primary">${input.files[0].name}</span>. Click 'Analyze & Next' to begin.`;
+                statusDiv.innerHTML = `File selected: <span class="text-primary">${input.files[0].name}</span>. Click 'Analyze' to begin.`;
                 uploadText.textContent = `File Ready: ${input.files[0].name}`;
                 currentStatus.fileSelected = true;
             } else {
@@ -655,37 +1184,37 @@
             checkNavigation();
         }
 
-        function handleStyleUpload() {
-            const input = document.getElementById('style-photo-input');
-            const statusDiv = document.getElementById('style-upload-status');
-            
-            if (input.files.length > 0) {
-                statusDiv.innerHTML = `Style reference selected: <span class="text-primary">${input.files[0].name}</span>. Click 'Get Suggestions'.`;
-                currentStatus.styleUploaded = true;
-            } else {
-                statusDiv.textContent = 'No file selected.';
-                currentStatus.styleUploaded = false;
-            }
-            checkNavigation();
-        }
+        // REMOVED: handleStyleUpload function
 
-        function toggleInventoryModal(show) {
-            const modal = document.getElementById('inventory-modal');
-            if (show) {
-                modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
-            }
-        }
 
-        // --- Color Palette Modal Logic (UPDATED FOR 3-2 LAYOUT) ---
+        // --- Color Palette Modal Logic (Corrected error in status bar reset) ---
 
         function showColorPaletteModal(show) {
             const modal = document.getElementById('color-palette-modal');
             const content = document.getElementById('color-palette-content');
             
             if (!colorPaletteResults && show) {
-                alert("Please upload and analyze your face photo first!");
+                const statusBar = document.getElementById('status-bar');
+                const originalHtml = statusBar.innerHTML;
+                
+                // Show temporary error message
+                statusBar.innerHTML = `<div class="bg-red-100 p-3 rounded-lg text-red-700 text-center w-full">Please upload and analyze your face photo first!</div>`;
+                
+                setTimeout(() => {
+                    // Restore original HTML using the stored attribute
+                    const initialHtml = statusBar.getAttribute('data-initial-html');
+                    if (initialHtml) {
+                         statusBar.innerHTML = initialHtml;
+                         // Manually re-find the display-user-id element after restoration
+                         const displayId = document.getElementById('display-user-id');
+                         if (displayId && userId) {
+                             displayId.textContent = `ID: ${userId}`;
+                         }
+                    } else {
+                        // Fallback in case attribute was not set (should not happen with the corrected HTML)
+                         statusBar.innerHTML = originalHtml;
+                    }
+                }, 3000);
                 return;
             }
 
@@ -852,6 +1381,20 @@
                     bottomColor: '#4B5563' 
                 });
             }
+            
+            // MODIFIED: Incorporate a few real items from inventory for a more realistic mock
+            let inventoryTops = inventoryItems.filter(item => item.type === 'top').slice(0, 2);
+            let inventoryBottoms = inventoryItems.filter(item => item.type === 'bottom').slice(0, 2);
+            
+            if (inventoryTops.length > 0 && inventoryBottoms.length > 0) {
+                mockOutfits.push({
+                    id: mockOutfits.length + 1,
+                    top: `Your Uploaded ${inventoryTops[0].type.toUpperCase()}`,
+                    bottom: `Your Uploaded ${inventoryBottoms[0].type.toUpperCase()}`,
+                    topColor: '#4F46E5', // Primary color for user items
+                    bottomColor: '#FDE047' // Accent color for user items
+                });
+            }
 
 
             mockOutfits.forEach(outfit => {
@@ -880,20 +1423,25 @@
             });
         }
 
+        function handleChefUp() {
+            if (!selectedItemId) return;
+            showPage('page-results');
+        }
 
-        // Initialize the app state (Unchanged)
+
+        // Initialize the app state
         window.onload = () => {
             const path = window.location.pathname;
             if (isAuthenticated && path.includes('upload_photo')) {
-                if (currentStatus.faceUploaded) {
-                     showPage('page-style-upload');
-                } else {
-                    showPage('page-face-upload');
-                }
+                // MODIFIED: After login, go straight to Step 1: Face Analysis
+                showPage('page-face-upload');
             } else {
                 showPage('page-home');
             }
             checkNavigation();
+            
+            // Initialize Firebase and set up listeners
+            setupFirebase();
         }
 
     </script>

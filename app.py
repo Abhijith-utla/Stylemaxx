@@ -69,20 +69,39 @@ def logout():
         }, quote_via=quote_plus)
     )
 
+# --- Firebase Config Helper Function ---
+def get_firebase_config():
+    """Builds and returns the Firebase config dictionary from environment variables."""
+    return {
+        "apiKey": os.environ.get("FIREBASE_API_KEY"),
+        "authDomain": os.environ.get("FIREBASE_AUTH_DOMAIN"),
+        "projectId": os.environ.get("FIREBASE_PROJECT_ID"),
+        "storageBucket": os.environ.get("FIREBASE_STORAGE_BUCKET"),
+        "messagingSenderId": os.environ.get("FIREBASE_MESSAGING_SENDER_ID"),
+        "appId": os.environ.get("FIREBASE_APP_ID"),
+        "measurementId": os.environ.get("FIREBASE_MEASUREMENT_ID"),
+    }
+
+# MODIFIED: Pass Firebase config to all routes rendering 'index.html'
 @app.route('/')
 def home():
     user_data = session.get('profile')
-    # Pass color results to the template for the status bar icon
     color_results = session.get('color_palette_results')
-    return render_template('index.html', user=user_data, color_results=color_results)
+    # Pass Firebase config and App ID
+    return render_template('index.html', user=user_data, color_results=color_results, 
+                           firebase_config=get_firebase_config(), 
+                           firebase_app_id=os.environ.get("FIREBASE_APP_ID"))
 
+# MODIFIED: Pass Firebase config to all routes rendering 'index.html'
 @app.route('/upload_photo', methods=['GET', 'POST'])
 @requires_auth
 def upload_photo():
     user_data = session.get('profile')
-    # Use index.html as a single-page app, passing relevant data
     color_results = session.get('color_palette_results')
-    return render_template('index.html', user=user_data, color_results=color_results)
+    # Pass Firebase config and App ID
+    return render_template('index.html', user=user_data, color_results=color_results,
+                           firebase_config=get_firebase_config(),
+                           firebase_app_id=os.environ.get("FIREBASE_APP_ID"))
 
 # --- New Route for Face Analysis ---
 @app.route('/analyze_face', methods=['POST'])
