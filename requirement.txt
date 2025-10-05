@@ -12,3 +12,15 @@ opencv-python             # For image loading and processing (cv2)
 numpy                     # For numerical operations on image arrays
 scikit-learn              # For KMeans clustering (sklearn)
 face-recognition          # For face and landmark detection
+
+Flask
+python-dotenv
+Authlib
+werkzeug
+opencv-python
+numpy
+scikit-learn
+Pillow
+joblib
+torch
+torchvision

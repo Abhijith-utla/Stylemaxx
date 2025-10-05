@@ -6,6 +6,7 @@
     <title>StyleMaxx - Authenticated</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
+        // Firebase imports for module scripts
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, addDoc, deleteDoc, onSnapshot, collection, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -232,6 +233,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.2s ease;
+            cursor: pointer; /* Enable selection */
         }
         .inventory-item-card:hover {
             transform: translateY(-5px);
@@ -358,7 +360,7 @@
                     </button>
                 </div>
                 
-                <p class="text-md text-gray-500 mb-8">All your uploaded clothing items are displayed here. Use them to create new outfits!</p>
+                <p class="text-md text-gray-500 mb-8">Select a clothing item (Top or Bottom) from your catalog and click 'Chef Up' to get personalized outfit suggestions.</p>
 
                 <div id="inventory-catalog-page" class="flex-grow">
                     </div>
@@ -377,7 +379,6 @@
                     </button>
                 </div>
             </div>
-            <!-- Floating Add Inventory Item button -->
             <button onclick="toggleInventoryUploadModal(true)" aria-label="Add Inventory Item" class="fixed bottom-24 right-6 sm:bottom-16 sm:right-8 z-40 w-14 h-14 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition transform">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path></svg>
             </button>
@@ -388,7 +389,7 @@
             <div class="max-w-6xl mx-auto pb-10 z-20">
                 <h2 class="text-3xl font-bold text-secondary mb-8 text-center">Step 3: Your StyleMaxx Outfit Pairs</h2>
 
-                <div id="outfit-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div id="outfit-cards" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     </div>
                 
                 <div class="text-center mt-12">
@@ -405,8 +406,6 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
             <h3 class="text-3xl font-bold text-primary mb-1 text-center">Add New Item</h3>
-            <!-- Minimal subtitle removed for cleaner UI -->
-
             <div class="bg-gray-50 p-4 rounded-xl shadow-inner mb-6">
                 <h4 class="text-xl font-semibold text-primary mb-3 text-center">Item Details</h4>
                 <div class="space-y-4">
@@ -435,8 +434,7 @@
                 <div id="inventory-message" class="text-center text-sm mt-2 font-medium"></div>
             </div>
             
-            <!-- Minimal footer note removed -->
-        </div>
+            </div>
     </div>
 
 
@@ -513,6 +511,8 @@
         const __firebase_config = '{{ firebase_config | tojson }}';
         // The app ID is passed for constructing the Firestore path.
         const __app_id = '{{ firebase_app_id | default("default-app-id") }}';
+        // The outfit results are passed from the backend
+        const __outfit_results = '{{ outfit_results | tojson }}'; // <--- NEW INJECTION
         // Note: __initial_auth_token is kept as null for this version, relying on signInAnonymously if needed.
         const __initial_auth_token = null;
     </script>
@@ -527,16 +527,17 @@
         
         const isAuthenticated = "{% if user %}true{% else %}false{% endif %}" === "true";
         let colorPaletteResults = JSON.parse('{{ color_results | tojson }}'); 
+        let outfitResults = JSON.parse(typeof __outfit_results !== 'undefined' ? __outfit_results : 'null'); // <--- INITIALIZE OUTFIT RESULTS
         
         let currentStatus = {
             faceUploaded: !!colorPaletteResults, 
-            styleUploaded: false, // Renamed to style uploaded but will function as 'can_suggest'
-            isAnalyzing: false
+            styleUploaded: false, 
+            isAnalyzing: false,
+            isCheffingUp: false, // <--- NEW STATE FLAG
+            canChefUp: false,    // <--- NEW STATE FLAG
         };
 
-        // MODIFIED: 'page-style-upload' changed to 'page-inventory-catalog'
         const pages = ['page-home', 'page-auth-prompt', 'page-face-upload', 'page-inventory-catalog', 'page-results'];
-        // MODIFIED: Nav buttons updated, removed 'style-nav-button' reference (it's now 'style-nav-button' for 'page-results')
         const navButtons = ['home-nav-button', 'palette-nav-button', 'inventory-nav-button', 'style-nav-button'];
 
 
@@ -547,7 +548,6 @@
             const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, setLogLevel } = window.firebaseImports;
             
             try {
-                // MODIFIED: Global variables are now defined above via Flask injection
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                 const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
                 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -707,7 +707,7 @@
             // MODIFIED: Use a grid layout for a visually appealing catalog
             catalogContainer.innerHTML = `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 ${inventoryItems.map(item => `
-                    <div class="inventory-item-card ${selectedItemId === item.id ? 'ring-4 ring-primary' : ''}" data-item-id="${item.id}" role="button" tabindex="0" aria-selected="${selectedItemId === item.id}" onclick="selectInventoryItem('${item.id}')" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault(); selectInventoryItem('${item.id}');}">
+                    <div class="inventory-item-card ${selectedItemId === item.id ? 'ring-4 ring-primary' : ''} ${item.type === 'top' || item.type === 'bottom' ? '' : 'opacity-70 grayscale'}" data-item-id="${item.id}" role="button" tabindex="0" aria-selected="${selectedItemId === item.id}" onclick="selectInventoryItem('${item.id}')" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault(); selectInventoryItem('${item.id}');}">
                         <img src="${item.imageUrl || 'https://placehold.co/250x250/FDE047/111827?text=?'}" alt="${item.type}" class="object-cover">
                         <span class="inventory-type-tag">${item.type.toUpperCase()}</span>
                         <div class="p-3 flex justify-between items-center">
@@ -722,6 +722,10 @@
         }
 
         function selectInventoryItem(itemId) {
+            // Find the item to check its type
+            const item = inventoryItems.find(i => i.id === itemId);
+            const isChefable = item && (item.type === 'top' || item.type === 'bottom');
+
             // Instant visual update without full re-render to avoid flicker
             if (selectedItemId && selectedItemId !== itemId) {
                 const prev = document.querySelector(`[data-item-id="${selectedItemId}"]`);
@@ -738,6 +742,7 @@
                     curr.setAttribute('aria-selected', 'false');
                 }
                 selectedItemId = null;
+                currentStatus.canChefUp = false;
             } else {
                 // Select
                 const curr = document.querySelector(`[data-item-id="${itemId}"]`);
@@ -746,6 +751,10 @@
                     curr.setAttribute('aria-selected', 'true');
                 }
                 selectedItemId = itemId;
+                currentStatus.canChefUp = isChefable;
+                if (!isChefable) {
+                     alert("Outfit suggestions can only be generated for 'Top' or 'Bottom' items.");
+                }
             }
             checkNavigation();
         }
@@ -907,7 +916,7 @@
                 }
 
                 if (pageId === 'page-results') {
-                    generateOutfitCards();
+                    generateOutfitCards(); // <--- RENDER ML RESULTS
                 }
 
                 // MODIFIED: Show loading state for Inventory Catalog if it's not ready
@@ -939,7 +948,7 @@
             const paletteNavButton = document.getElementById('palette-nav-button');
             const styleNavButton = document.getElementById('style-nav-button');
             const homeNavButton = document.getElementById('home-nav-button');
-            const inventoryNavButton = document.getElementById('inventory-nav-button'); // New element to check
+            const inventoryNavButton = document.getElementById('inventory-nav-button'); 
 
             // MODIFIED: Only enable if authenticated
             const navButtonsToEnable = [homeNavButton, inventoryNavButton];
@@ -954,21 +963,29 @@
                 }
             }
             
-            // MODIFIED: suggestionsButton now requires face analysis AND at least one item in inventory
+            // MODIFIED: suggestionsButton now requires face analysis AND selected, chef-able item
             if (suggestionsButton) {
-                if (currentStatus.faceUploaded && currentStatus.styleUploaded && selectedItemId) { 
+                if (currentStatus.faceUploaded && currentStatus.canChefUp && selectedItemId && !currentStatus.isCheffingUp) { 
                     suggestionsButton.disabled = false;
                     suggestionsButton.classList.remove('opacity-50');
+                    suggestionsButton.textContent = 'Chef Up Outfits';
                 } else {
                     suggestionsButton.disabled = true;
                     suggestionsButton.classList.add('opacity-50');
+                    if (currentStatus.isCheffingUp) {
+                        suggestionsButton.textContent = 'Cheffing Up...';
+                    } else if (!currentStatus.faceUploaded) {
+                        suggestionsButton.textContent = 'Complete Step 1';
+                    } else if (!currentStatus.canChefUp || !selectedItemId) {
+                         suggestionsButton.textContent = 'Select a Top/Bottom';
+                    }
                 }
             }
 
             if (currentStatus.faceUploaded) {
                 navButtonsToEnable.push(paletteNavButton);
-                // MODIFIED: 'Style' nav button is now 'Outfits' (page-results), but we only enable it if we also have clothes.
-                if (currentStatus.styleUploaded) {
+                // MODIFIED: 'Style' nav button is now 'Outfits' (page-results), enable if results are available
+                if (outfitResults && outfitResults.suggested_outfits && outfitResults.suggested_outfits.length > 0) {
                     navButtonsToEnable.push(styleNavButton);
                 }
             }
@@ -990,7 +1007,7 @@
                     paletteNavButton.classList.add('opacity-50');
                 }
             }
-            if (!currentStatus.styleUploaded || !currentStatus.faceUploaded) {
+            if (!outfitResults || !outfitResults.suggested_outfits || outfitResults.suggested_outfits.length === 0) {
                 if (styleNavButton) {
                     styleNavButton.disabled = true;
                     styleNavButton.classList.add('opacity-50');
@@ -1051,7 +1068,6 @@
                     
                 } else {
                     const errorData = await response.json();
-                    // NOTE: Custom modal UI should be used here instead of alert/confirm
                     statusDiv.innerHTML = `<span class="text-red-600 font-semibold">Error: ${errorData.error || 'Failed to analyze face.'}</span>`;
                     faceNextButton.textContent = 'Retry Analysis';
                 }
@@ -1074,9 +1090,7 @@
                 document.getElementById('face-photo-input').click();
             }
         });
-        // REMOVED: Style Upload event listener
-        // document.getElementById('style-upload-area').addEventListener('click', () => { ... });
-
+        
         // Hook up change listener for inventory input
         document.addEventListener('DOMContentLoaded', () => {
             const inventoryInput = document.getElementById('inventory-photo-input');
@@ -1117,23 +1131,19 @@
         
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             document.getElementById('face-upload-area').addEventListener(eventName, preventDefaults, false);
-            // REMOVED: Style Upload drag/drop listeners
             document.getElementById('inventory-upload-area').addEventListener(eventName, preventDefaults, false);
         });
         
         ['dragenter', 'dragover'].forEach(eventName => {
             document.getElementById('face-upload-area').addEventListener(eventName, () => document.getElementById('face-upload-area').classList.add('ring-2', 'ring-primary'), false);
-            // REMOVED: Style Upload drag/drop ring
             document.getElementById('inventory-upload-area').addEventListener(eventName, () => document.getElementById('inventory-upload-area').classList.add('ring-2', 'ring-primary'), false);
         });
         ['dragleave', 'drop'].forEach(eventName => {
             document.getElementById('face-upload-area').addEventListener(eventName, () => document.getElementById('face-upload-area').classList.remove('ring-2', 'ring-primary'), false);
-            // REMOVED: Style Upload drag/drop ring
             document.getElementById('inventory-upload-area').addEventListener(eventName, () => document.getElementById('inventory-upload-area').classList.remove('ring-2', 'ring-primary'), false);
         });
         
         document.getElementById('face-upload-area').addEventListener('drop', handleDrop.bind(null, 'face-photo-input'), false);
-        // REMOVED: Style Upload drop handler
         document.getElementById('inventory-upload-area').addEventListener('drop', (e) => {
             handleDrop('inventory-photo-input', e);
             // Mirror change handler for preview and UI state
@@ -1158,7 +1168,6 @@
                 input.files = files;
                 if (targetInputId === 'face-photo-input') {
                     handleFaceUpload();
-                // REMOVED: Style Upload drop logic
                 } else if (targetInputId === 'inventory-photo-input') {
                     // Call the change event logic explicitly for consistency
                     const event = new Event('change');
@@ -1184,10 +1193,7 @@
             checkNavigation();
         }
 
-        // REMOVED: handleStyleUpload function
-
-
-        // --- Color Palette Modal Logic (Corrected error in status bar reset) ---
+        // --- Color Palette Modal Logic (Unchanged) ---
 
         function showColorPaletteModal(show) {
             const modal = document.getElementById('color-palette-modal');
@@ -1205,13 +1211,12 @@
                     const initialHtml = statusBar.getAttribute('data-initial-html');
                     if (initialHtml) {
                          statusBar.innerHTML = initialHtml;
-                         // Manually re-find the display-user-id element after restoration
                          const displayId = document.getElementById('display-user-id');
                          if (displayId && userId) {
                              displayId.textContent = `ID: ${userId}`;
                          }
                     } else {
-                        // Fallback in case attribute was not set (should not happen with the corrected HTML)
+                        // Fallback 
                          statusBar.innerHTML = originalHtml;
                     }
                 }, 3000);
@@ -1357,75 +1362,104 @@
         }
 
 
-        // --- Page 5 Logic (Results) (Unchanged) ---
+        // --- Page 5 Logic (Results) (FINAL URL MAPPING) ---
         function generateOutfitCards() {
             const cardsContainer = document.getElementById('outfit-cards');
             cardsContainer.innerHTML = ''; 
-
-            const mockOutfits = [
-                { id: 1, top: 'Cream Linen Shirt', bottom: 'Navy Chinos', topColor: '#FDFCEF', bottomColor: '#1F2937' },
-                { id: 2, top: 'Olive Green Jacket', bottom: 'Light Wash Jeans', topColor: '#5C6773', bottom: 'Light Wash Jeans', bottomColor: '#BFDBFE' },
-                { id: 3, top: 'Charcoal Knit Sweater', bottom: 'Black Trousers', topColor: '#374151', bottomColor: '#1F2937' },
-                { id: 4, top: 'Coral Blouse', bottom: 'White Pleated Skirt', topColor: '#F4897C', bottomColor: '#FFFFFF' }, 
-            ];
             
-            if (colorPaletteResults && colorPaletteResults.color_palette.complementary_colors.length > 0) {
-                 const bestColorName = colorPaletteResults.color_palette.complementary_colors[0];
-                 const bestColorHex = bestColorName === 'Royal Blue' ? '#002FA7' : (bestColorName === 'Pastels' ? '#C6D5F2' : '#4F46E5'); 
+            if (!outfitResults || !outfitResults.suggested_outfits || outfitResults.suggested_outfits.length === 0) {
+                 cardsContainer.innerHTML = `
+                    <div class="text-center py-20 md:col-span-2">
+                        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-xl text-gray-600 font-medium">No Outfit Suggestions Yet</p>
+                        <p class="text-md text-gray-500 mt-2">Go to the Inventory Catalog and select a Top or Bottom to 'Chef Up'.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const originalItemType = outfitResults.original_item_type;
+            const suggestedType = originalItemType === 'top' ? 'Suggested Bottom' : 'Suggested Top';
+
+            outfitResults.suggested_outfits.forEach((imagePath, index) => {
                 
-                mockOutfits.push({
-                    id: 5, 
-                    top: `The Perfect ${bestColorName} Tee`, 
-                    bottom: 'Tailored Gray Slacks', 
-                    topColor: bestColorHex, 
-                    bottomColor: '#4B5563' 
-                });
-            }
-            
-            // MODIFIED: Incorporate a few real items from inventory for a more realistic mock
-            let inventoryTops = inventoryItems.filter(item => item.type === 'top').slice(0, 2);
-            let inventoryBottoms = inventoryItems.filter(item => item.type === 'bottom').slice(0, 2);
-            
-            if (inventoryTops.length > 0 && inventoryBottoms.length > 0) {
-                mockOutfits.push({
-                    id: mockOutfits.length + 1,
-                    top: `Your Uploaded ${inventoryTops[0].type.toUpperCase()}`,
-                    bottom: `Your Uploaded ${inventoryBottoms[0].type.toUpperCase()}`,
-                    topColor: '#4F46E5', // Primary color for user items
-                    bottomColor: '#FDE047' // Accent color for user items
-                });
-            }
+                // 1. Clean the path provided by the ML model.
+                // It removes the local directory name ("apparel_dataset/")
+                // and ensures the path is clean for the send_from_directory function.
+                let filename = imagePath.replace('apparel_dataset/', '');
+                
+                // 2. Construct the FINAL public URL using the new endpoint `/apparel_static/`
+                const imageUrl = `/apparel_static/${filename}`; 
 
-
-            mockOutfits.forEach(outfit => {
                 const cardHtml = `
-                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transform hover:scale-[1.02] transition-transform duration-300">
-                        <div class="p-5">
-                            <h3 class="text-xl font-bold text-secondary mb-3">Outfit #${outfit.id}</h3>
-                            <p class="text-sm text-gray-500 mb-4">A perfect match based on your palette and style.</p>
-                            
-                            <div class="mb-3 p-3 bg-gray-50 rounded-lg flex items-center justify-between border-l-4" style="border-color: ${outfit.topColor};">
-                                <span class="font-semibold text-sm">${outfit.top}</span>
-                                <span class="text-xs text-gray-500">TOP</span>
-                            </div>
-
-                            <div class="p-3 bg-gray-50 rounded-lg flex items-center justify-between border-l-4" style="border-color: ${outfit.bottomColor};">
-                                <span class="font-semibold text-sm">${outfit.bottom}</span>
-                                <span class="text-xs text-gray-500">BOTTOM</span>
-                            </div>
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-shadow duration-300 hover:shadow-2xl">
+                        
+                        <div class="w-full h-96 rounded-t-xl overflow-hidden shadow-md">
+                            <img src="${imageUrl}" alt="${suggestedType} ${index + 1}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
                         </div>
-                        <button class="w-full py-3 bg-primary text-white font-medium hover:bg-indigo-700 transition-colors duration-200 text-sm">
-                            View Details
-                        </button>
+                        
+                        <div class="p-3 bg-gray-50 text-center">
+                            <span class="text-sm font-semibold text-primary">${suggestedType} Match #${index + 1}</span>
+                        </div>
+                        
                     </div>
                 `;
                 cardsContainer.insertAdjacentHTML('beforeend', cardHtml);
             });
         }
+        
+        // --- NEW Chef Up Logic ---
+        async function handleChefUp() {
+            if (!selectedItemId || currentStatus.isCheffingUp || !currentStatus.faceUploaded) return;
+            
+            const selectedItem = inventoryItems.find(item => item.id === selectedItemId);
 
-        function handleChefUp() {
-            if (!selectedItemId) return;
-            showPage('page-results');
+            if (!selectedItem || (selectedItem.type !== 'top' && selectedItem.type !== 'bottom')) {
+                return;
+            }
+
+            currentStatus.isCheffingUp = true;
+            checkNavigation(); // Update button to 'Cheffing Up...'
+
+            try {
+                const response = await fetch('/chef_up', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        itemId: selectedItem.id,
+                        imageUrl: selectedItem.imageUrl, // Send the Base64/URL to the backend
+                        itemType: selectedItem.type,
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update client-side variable with new results
+                    outfitResults = {
+                        original_item_id: selectedItem.id,
+                        original_item_type: selectedItem.type,
+                        suggested_outfits: data.results // The list of 5 paths
+                    };
+                    
+                    // Ensure the Outfits nav button is enabled now that we have results
+                    checkNavigation();
+                    
+                    // Navigate to the results page to show the new outfits
+                    showPage('page-results');
+                } else {
+                    const errorData = await response.json();
+                    alert(`Outfit Chef Up Failed: ${errorData.error || 'Server error.'}`);
+                }
+            } catch (error) {
+                console.error('Chef Up Error:', error);
+                alert('Network error or server connection failed during Chef Up.');
+            } finally {
+                currentStatus.isCheffingUp = false;
+                checkNavigation();
+            }
         }
 
 
