@@ -1,6 +1,6 @@
-# 👗 StyleMax – AI-Powered Outfit Recommendation Platform
+# 👗 StyleMaxx – AI-Powered Outfit Recommendation Platform
 
-StyleMax is a **full-stack AI web application** that blends fashion and technology to create a **personalized digital styling experience**.
+StyleMaxx is a **full-stack AI web application** that blends fashion and technology to create a **personalized digital styling experience**.
 
 The app allows users to:
 
@@ -8,7 +8,7 @@ The app allows users to:
 * **Authenticate securely** with OAuth (Google, GitHub, or Email).
 * **Discover recommendations** powered by deep learning models that analyze color, texture, and clothing structure.
 
-Unlike generic recommendation engines, StyleMax focuses on **individual style discovery**. It doesn’t just suggest “trending” items—it learns from each upload to suggest complementary looks, helping users mix, match, and expand their wardrobe intelligently.
+Unlike generic recommendation engines, StyleMaxx focuses on **individual style discovery**. It doesn’t just suggest “trending” items—it learns from each upload to suggest complementary looks, helping users mix, match, and expand their wardrobe intelligently.
 
 ---
 
